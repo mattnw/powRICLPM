@@ -1,0 +1,25 @@
+Package: powRICLPM
+Version: 0.0.0.9000
+Date: 2021-10-15
+Title: Power analysis for the random intercept cross-lagged panel model
+Authors@R: person("Jeroen", "Mulder", email = "j.d.mulder@uu.nl",
+  role = c("aut", "cre"), comment = c(ORCID = "0000-0002-5553-0856"))
+Maintainer: Jeroen Mulder <j.d.mulder@uu.nl>
+Description: Perform a Monte Carlo power analysis (for multiple) scenarions for the random intercept cross-lagged panel model (RICLPM).
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+URL: http://jeroen.d.mulder.github.io/powRICLPM
+BugReports: https://github.com/JeroenDMulder/powRICLPM/issues
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Imports: 
+    lavaan (>= 0.6.7),
+    doSNOW (>= 1.0.19),
+    plyr (>= 1.8.5),
+    data.table (>= 1.12.8)
+Config/testthat/edition: 3
