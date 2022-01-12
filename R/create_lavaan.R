@@ -85,28 +85,6 @@ create_lavaan <- function(time_points,
   return(lav_table)
 }
 
-#' Create Lavaan Syntax for Random Intercepts
-#'
-#' Generate parameter table for the random intercepts of the RICLPM.
-#'
-#' @param input A list with objects necessary for creating lavaan model syntax. See Details for complete list of necessary elements.
-#'
-#' @details
-#' The \code{input} argument must containg the following elements:
-#' \itemize{
-#'   \item{$k}{Number of variables.}
-#'   \item{$time_points}{The number of time points.}
-#'   \item{$ICC}{Proportion of variance at the between-unit level.}
-#'   \item{$RI_cor}{The random intercept correlations.}
-#'   \item{$Phi}{Positive definite matrix of standardized autoregressive and cross-lagged effects in the population. Columns represent predictors and rows represent outcomes.}
-#'   \item{wSigma}{Variance-covariance matrix of within-unit components. Variances of within-unit components must be set to 1 such that this matrix is equivalent to the correlation matrix.}
-#'   \item{Psi}{Variance-covariance matrix of within-unit residuals at wave 2 and later.}
-#'   \item{$name_obs}{Matrix with names of observed variables.}
-#'   \item{$name_RI}{Matrix with names of random intercept factors.}
-#'   \item{$name_within}{Matrix with names of within-components.}
-#' }
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for the random intercepts.
 lav_RI <- function(input) {
   lhs <- rep(input$name_RI, each = input$time_points)
   op <- rep("=~", times = input$k*input$time_points)
@@ -116,13 +94,6 @@ lav_RI <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Random Intercepts Variance
-#'
-#' Generate parameter table for the variance of the random intercepts of the RICLPM.
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for the variances of the random intercepts.
 lav_RI_var <- function(input) {
   lhs <- rhs <- input$name_RI
   op <- rep("~~", times = input$k)
@@ -135,15 +106,7 @@ lav_RI_var <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Random Intercepts Covariance
-#'
-#' Generate parameter table for the covariance(s) between the random intercepts of the RICLPM.
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for the covariance(s) between the random intercepts.
 lav_RI_cor <- function(input) {
-
   # Create combinations of random intercept factors
   combnRI <- t(combn(input$name_RI, 2))
 
@@ -160,13 +123,6 @@ lav_RI_cor <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Within Components
-#'
-#' Generate parameter table for creating the within-unit components of the RICLPM.
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter tabel) with lavaan model syntax for the within-unit components.
 lav_within <- function(input) {
   lhs <- c(unlist(input$name_within))
   op <- rep("=~", times = length(input$name_within))
@@ -176,13 +132,6 @@ lav_within <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Within Lagged Effects
-#'
-#' Generate parameter table for the within-unit lagged effects of the RICLPM.
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for the within-unit lagged effects
 lav_lagged <- function(input) {
   lhs <- rep(c(t(input$name_within))[-(1:input$k)], each = input$k)
   op <- rep("~", times = input$k^2)
@@ -196,13 +145,6 @@ lav_lagged <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Wave 1 Residual Variance
-#'
-#' Generate parameter table for the residual variance of the within-unit components at wave 1 of the RICLPM.
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for residual variances of the within-unit components at wave 1.
 lav_within_var1 <- function(input) {
   lhs <- rhs <- t(input$name_within[1, ])
   op <- rep("~~", times = input$k)
@@ -215,13 +157,6 @@ lav_within_var1 <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Wave 1 Residual Covariance
-#'
-#' Generate parameter table for the residual covariance(s) between the within-unit components of the RICLPM.
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaa model syntax for the residual covariance(s) between the within-unit components of the RICLPM.
 lav_within_cov1 <- function(input) {
   lhs <- unlist(input$name_within[1, 1])
   rhs <- unlist(input$name_within[1, 2])
@@ -235,11 +170,6 @@ lav_within_cov1 <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Later Residual Variance
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for the residual variances of the RICLPM for wave 2 and later.
 lav_within_var2 <- function(input) {
   lhs <- rhs <- c(unlist(input$name_within[-1, ]))
   op <- "~~"
@@ -252,11 +182,6 @@ lav_within_var2 <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax for Later Residual Covariance
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for the residual covariances of the RICLPM for wave 2 and later.
 lav_within_cov2 <- function(input) {
 
   # Create combinations of later within-components
@@ -275,11 +200,6 @@ lav_within_cov2 <- function(input) {
   return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
 }
 
-#' Create Lavaan Syntax No Measurement Errors
-#'
-#' @inheritParams lav_RI
-#'
-#' @return A data frame (parameter table) with lavaan model syntax for unique factor variances (e.g., measurement errors) constrained to 0.
 lav_ME <- function(input) {
   lhs <- rhs <- c(unlist(input$name_obs))
   op <- rep("~~", times = length(input$name_obs))

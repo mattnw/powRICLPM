@@ -4,52 +4,60 @@
 # powRICLPM
 
 <!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/powRICLPM)](https://CRAN.R-project.org/package=powRICLPM)
 <!-- badges: end -->
 
-The goal of powRICLPM is to More about what it does (maybe more than one
-line) Use four spaces when indenting paragraphs within the Description.
+`powRICLPM` is an `R` package that performs a power analysis for the
+random intercept cross-lagged panel model (RI-CLPM) in a simple and
+use-friendly way. It has three main functionalities:
+
+1.  Perform an [à priori power analysis]() to get a preliminary sample
+    size recommendation for detecting an effect of interest with the
+    desired power level.
+2.  Perform a [post hoc power analysis]() to investigate the performance
+    of the RI-CLPM (w.r.t. a parameter of interest) under various
+    conditions (i.e., under various sample sizes and number of repeated
+    measures).
+3.  Create Mplus syntax for performing a power analysis for the RI-CLPM
+    using Mplus.
+
+User guides for the above functionalities can be found in vignettes
+under the ‘Articles’ tab. Technical details on the implementation of the
+power analysis can be found in LINK NAAR PAPER.
 
 ## Installation
 
-You can install the released version of powRICLPM from
-[CRAN](https://CRAN.R-project.org) with:
+You can install the development version of `powRICLPM` from GitHub with:
 
 ``` r
-install.packages("powRICLPM")
+install.packages("devtools")
+devtools::install_github("jeroendmulder/powRICLPM")
 ```
 
-## Example
+## Documentation
 
-This is a basic example which shows you how to solve a common problem:
+Every user-facing function in the package is documented, and the
+documentation can be accessed by running `?function_name` in the R
+console, e.g., `?powRICLPM`. Furthermore, there are three main vignettes
+(accessable via the ‘Articles’ tab), describing the three main
+functionalities of this package, as described above.
 
-``` r
-library(powRICLPM)
-## basic example code
-```
+## Citing `powRICLPM`
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+You can cite the R-package with the following citation:
 
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
+> Mulder, J.D., (n.d.). *Performing power analysis for the RI-CLPM*
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this. You could also
-use GitHub Actions to re-render `README.Rmd` every time you push. An
-example workflow can be found here:
-<https://github.com/r-lib/actions/tree/master/examples>.
+## Contact
 
-You can also embed plots, for example:
+If you have ideas, comments, or issues you would like to raise, please
+get in touch.
 
-<img src="man/figures/README-pressure-1.png" width="100%" />
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+-   Issues and idea can be raised on GitHub via
+    <https://github.com/jeroendmulder/powRICLPM>
+-   Pull request can be raised on GitHub via
+    <https://github.com/jeroendmulder/powRICLPM/pulls>

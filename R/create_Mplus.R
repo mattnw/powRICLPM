@@ -150,28 +150,6 @@ powRICLPM_Mplus <- function(sample_size,
   invisible()
 }
 
-#' Create Mplus Preamble for RICLPM Power Analysis
-#'
-#' Generate TITLE, MONTECARLO, and ANALYSIS command for RI-CLPM power analysis in Mplus.
-#'
-#'@param input A list with objects necessary for creating Mplus model syntax. See Details for complete list of necessary elements.
-#'
-#' @details
-#' The \code{input} argument must containing the following elements:
-#' \itemize{
-#'   \item{$k}{Number of variables.}
-#'   \item{$time_points}{The number of time points.}
-#'   \item{$ICC}{Proportion of variance at the between-unit level.}
-#'   \item{$RI_cor}{The random intercept correlations.}
-#'   \item{$Phi}{Positive definite matrix of standardized autoregressive and cross-lagged effects in the population. Columns represent predictors and rows represent outcomes.}
-#'   \item{wSigma}{Variance-covariance matrix of within-unit components. Variances of within-unit components must be set to 1 such that this matrix is equivalent to the correlation matrix.}
-#'   \item{Psi}{Variance-covariance matrix of within-unit residuals at wave 2 and later.}
-#'   \item{$name_obs}{Matrix with names of observed variables.}
-#'   \item{$name_RI}{Matrix with names of random intercept factors.}
-#'   \item{$name_within}{Matrix with names of within-components.}
-#' }
-#'
-#' @return A character string containing the setup/preamble commands for power analysis in \code{Mplus}.
 Mplus_pre <- function(input) {
   # Create TITLE command
   TITLE <- paste0("TITLE:\n Power analysis RICLPM with K = ", input$k, ", T = ", input$time_points, ", N = ", input$sample_size, "\n\n")
@@ -188,11 +166,6 @@ Mplus_pre <- function(input) {
   return(paste0(TITLE, MONTECARLO, ANALYSIS))
 }
 
-#' Create Mplus Syntax for Random Intercepts
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for random intercepts.
 Mplus_RI <- function(input) {
   lhs <- rep(input$name_RI, each = input$time_points)
   op <- " BY "
@@ -201,11 +174,6 @@ Mplus_RI <- function(input) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Random Intercept Variance
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the variances of the random intercepts.
 Mplus_RI_var <- function(input, estimation = F) {
   lhs <- input$name_RI
   op <- rhs <- rep("", times = input$k)
@@ -217,11 +185,6 @@ Mplus_RI_var <- function(input, estimation = F) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Random Intercept Covariance
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the covariance(s) between the random intercepts.
 Mplus_RI_cor <- function(input, estimation = F) {
 
   # Create combinations of random intercept factors
@@ -239,11 +202,6 @@ Mplus_RI_cor <- function(input, estimation = F) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Within Components
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the within components.
 Mplus_within <- function(input) {
   lhs <- c(unlist(input$name_within))
   op <- rep(" BY ", times = length(input$name_within))
@@ -252,11 +210,6 @@ Mplus_within <- function(input) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Within Lagged Effects
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the within-unit lagged effects.
 Mplus_lagged <- function(input, estimation = F) {
   # Create vector with outcomes
   lhs <- rep(c(t(input$name_within))[-(1:input$k)], each = input$k)
@@ -274,11 +227,6 @@ Mplus_lagged <- function(input, estimation = F) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Wave 1 Within-Component Variance
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the within-unit variance at wave 1.
 Mplus_within_var1 <- function(input, estimation = F) {
   lhs <- t(input$name_within[1, ])
   op <- rhs <- ""
@@ -290,11 +238,6 @@ Mplus_within_var1 <- function(input, estimation = F) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Wave 1 Within-Component Covariance
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the within-unit covariance at wave 1.
 Mplus_within_cov1 <- function(input, estimation = F) {
   lhs <- unlist(input$name_within[1, 1])
   rhs <- unlist(input$name_within[1, 2])
@@ -308,11 +251,6 @@ Mplus_within_cov1 <- function(input, estimation = F) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Later Residual Variance
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for within-unit residual variances at wave 2 and later.
 Mplus_within_var2 <- function(input, estimation = F){
   lhs <- c(unlist(input$name_within[-1, ]))
   op <- rhs <- ""
@@ -324,11 +262,6 @@ Mplus_within_var2 <- function(input, estimation = F){
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax for Later Residual Covariance
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for the within-unit residual covariance(s) at wave 2 and later.
 Mplus_within_cov2 <- function(input, estimation = F) {
   # Create within-component combinations
   combn_within <- t(apply(input$name_within[-1,], 1, combn, m = 2))
@@ -346,11 +279,6 @@ Mplus_within_cov2 <- function(input, estimation = F) {
   return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
 }
 
-#' Create Mplus Syntax No Measurement Errors
-#'
-#' @inheritParams Mplus_pre
-#'
-#' @return A data frame (parameter table) with Mplus syntax for constraining the unique factor variances of the observed variables (e.g., measurement error variances) to 0.
 Mplus_ME <- function(input) {
   lhs <- c(unlist(input$name_obs))
   op <- rhs <- ""

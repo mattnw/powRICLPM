@@ -1,0 +1,64 @@
+---
+title: "Post hoc power analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Post hoc power analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette details how you can perform a post hoc power analysis for the random intercept cross-lagged panel model (RI-CLPM) using the powRICLPM package. The goal of this analysis is to simulate the power to detect a specific effect in the RI-CLPM in (multiple) condition(s). In contrast to the à priori analyses, this analysis is typically done with a sufficiently large number of replications to achieve reliable results, and outputs more details (e.g., the bias, mean square error, average standard error, etc.) for the parameter of interest. For example, you wish to simulate the power to detect a small cross-lagged effect $\gamma_{2}$ (i.e., the causal effect of $x_{1}^{*}$ to $y_{2}^{*}$, where $x_{1}^{*}$ to $y_{2}^{*}$ denote the latent within-unit components of $x_{1}$ and $y_{2}$, respectively) when using a sample size of 250, 300, and 400, and 3 or 4 time points. Combined, this results in 6 simulation conditions.
+
+## Preparation 
+Before performing the post hoc power analysis, you must carefully determine the *population parameter values*, as these values impact the validity of this power analysis. Therefore, it is recommended to base parameter values on previous research, theory, or expert knowledge. Specifically, the post hoc analysis function requires the specification of:
+
+- `ICC`: The proportion of variance at the between-unit level (relative to the total variance).
+- `RI_cor`: The correlation between the random intercepts.
+- `Phi`: Standardized autoregressive and cross-lagged effects for the within-unit components of the model.
+- `wSigma`: Correlations between the within-unit components. 
+
+Details on how to decide on values for these population parameter values can be found in .... For our example, the parameter values are set to:
+
+```{r preparation}
+ICC <- 0.5
+RI_cor <- 0.3
+Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T) # The .2 refers to our standardized cross-lagged effect of interest
+wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
+```
+
+## Analysis
+To perform the post hoc power analysis, use the `powRICLPM()` function. You must provide:
+
+- the sample sizes and number of time points in the `sample_size` and `time_points` arguments respectively, 
+- the population values `ICC`, `RI_cor`, `Phi`, and `wSigma`, and
+- the number of MCMC replications you want to perform per condition in the `reps` argument. 
+
+For our example, we would specify:
+
+```{r analysis, eval = F}
+output <- powRICLPM(sample_size = c(250, 300, 400)
+                    time_points = c(3, 4),
+                    ICC = ICC,
+                    RI_cor = RI_cor, 
+                    Phi = Phi,
+                    wSigma = wSigma,
+                    reps = 1000)
+```
+
+Optionally, you can specify:
+
+- `cores`: The number of cores to use during the analysis. Executing the analysis using multiple cores can significantly reduce computation time.
+- `seed`: An integer to control the starting point of the random number generator. This is important to use if you want to replicate the results.
+- `save_path`: A directory to which to save any (data) files to. 
+
+Technical details on the implementation of the analysis can be found in LINK NAAR PAPER. 
+
+## Results
+Using the `powRICLPM()` function creates an object of class "powRICLPM", upon which we can call the `summary()` and `plot()` functions to summarize and visualize the results of our analysis, respectively. `summary()` displays a textual summary in the console, including general characteristics of the post hoc power analysis. To obtain more detailed simulation results for a specific parameter, including the *bias*, *standard deviation of the estimates*, *average standard error*, *mean square error*, and *proportion of times the 95% confidence interval contained the population parameter values*, you can specify a parameter of interest in the `parameter` argument. For example:
+
+```{r results1, eval = F}
+summary(output, parameter = "wB2~wA1")
+summary(output, parameter = "wA1~wA2") # Results in an error as the parameter name is invalid 
+```
+
+The `plot()` creates a `ggplot2` scatter plot of simulated power over the range of sample sizes, and with different lines for the conditions with different numbers of time points. You must provided the `parameter` argument to specify for which parameter to display the results. 

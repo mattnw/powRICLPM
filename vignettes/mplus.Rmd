@@ -1,0 +1,51 @@
+---
+title: "Power analysis using Mplus"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Power analysis using Mplus}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+This vignette details how you can automatically create Mplus syntax for performing a power analysis for the random intercept cross-lagged panel model (RI-CLPM) using the Mplus software package. For example, you wish to simulate the power to detect a small cross-lagged effect $\gamma_{2}$ (i.e., the causal effect of $x_{1}^{*}$ to $y_{2}^{*}$, where $x_{1}^{*}$ to $y_{2}^{*}$ denote the latent within-unit components of $x_{1}$ and $y_{2}$, respectively) when using a sample size of 250 and 4 time points. 
+
+## Preparation 
+Before performing the post hoc power analysis, you must carefully determine the *population parameter values*, as these values impact the validity of this power analysis. Therefore, it is recommended to base parameter values on previous research, theory, or expert knowledge. Specifically, the post hoc analysis function requires the specification of:
+
+- `ICC`: The proportion of variance at the between-unit level (relative to the total variance).
+- `RI_cor`: The correlation between the random intercepts.
+- `Phi`: Standardized autoregressive and cross-lagged effects for the within-unit components of the model.
+- `wSigma`: Correlations between the within-unit components. 
+
+Details on how to decide on values for these population parameter values can be found in .... For our example, the parameter values are set to:
+
+```{r preparation}
+ICC <- 0.5
+RI_cor <- 0.3
+Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T) # The .2 refers to our standardized cross-lagged effect of interest
+wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
+```
+
+## Create Mplus syntax
+To Mplus syntax, use the `powRICLPM_Mplus()` function. You must provide:
+
+- the sample sizes and number of time points in the `sample_size` and `time_points` arguments respectively, 
+- the population values `ICC`, `RI_cor`, `Phi`, and `wSigma`,
+- the number of MCMC replications you want to perform per condition in the `reps` argument,
+- a `seed` to control the starting point of the random number generator, and
+- a `save_path`, denoting the directory to which to save the Mplus input file to. 
+
+For our example, we would specify:
+
+```{r analysis, eval = F}
+powRICLPM_Mplus(sample_size = 250,
+                time_points = 4,
+                ICC = 0.5,
+                RI_cor = 0.3,
+                Phi = Phi,
+                wSigma = wSigma,
+                reps = 10000,
+                seed = 123456,
+                save_path = "./saved")
+```
+
+The `powRICLPM_Mplus()` creates an Mplus input file (a .txt file) and saves it to the specified directory. The file contains the Mplus model syntax needed to run a power analysis for the RI-CLPM in Mplus. More information about Monte Carlo simulations in Mplus can be found at [http://statmodel.com/download/usersguide/Chapter12.pdf](http://statmodel.com/download/usersguide/Chapter12.pdf).

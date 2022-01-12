@@ -13,7 +13,7 @@ run_condition(object)
 A list.
 }
 \description{
-This function runs a Monte Carlo simulation for a given condition. It generates data based on the \code{pop_synt} element in "object", and estimates an RI-CLPM using the \code{est_synt`} element in "object". Data generation and model estimation are done using \pkg{lavaan}.
+This function runs a Monte Carlo simulation for a given condition. It generates data based on the \code{pop_synt} element in "object", and estimates an RI-CLPM using the \code{est_synt} element in "object". Data generation and model estimation are done using \pkg{lavaan}.
 }
 \details{
 \subsection{Input: Elements in "object"}
