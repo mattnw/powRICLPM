@@ -6,7 +6,6 @@
 #'
 #' @inheritParams powRICLPM
 #' @param Psi Variance-covariance matrix of within-unit residuals from wave 2 onwards.
-#' @param syntax Logical indicating whether model syntax should be created.
 #'
 #' @details
 #' \subsection{Syntax generation}
@@ -19,8 +18,8 @@
 #'
 #' @examples
 #' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = T)
-#' wSigma <- matrix(c(1 , .3, .3, 1) , ncol = 2, byrow = T)
+#' Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = TRUE)
+#' wSigma <- matrix(c(1 , .3, .3, 1) , ncol = 2, byrow = TRUE)
 #' Psi <- compute_Psi(Phi = Phi, wSigma = wSigma)
 #'
 #' # Create and save Mplus model syntax for Monte Carlo power analysis
@@ -33,7 +32,6 @@
 #'                 reps = 10000,
 #'                 seed = 123456,
 #'                 save_path = "./saved")
-#'
 #' @export
 powRICLPM_Mplus <- function(sample_size,
                             time_points,
@@ -70,8 +68,12 @@ powRICLPM_Mplus <- function(sample_size,
   name_var <- LETTERS[1:input$k]
 
   # Create matrix of names for observed variable, within, and between components
-  input$name_obs <- purrr::map_dfc(name_var, paste0, 1:time_points)
-  input$name_within <- purrr::map_dfc(name_var, function(x) { paste0("w", x, 1:time_points)})
+  input$name_obs <- suppressMessages(
+    purrr::map_dfc(name_var, paste0, 1:time_points)
+  )
+  input$name_within <- suppressMessages(
+    purrr::map_dfc(name_var, function(x) { paste0("w", x, 1:time_points)})
+  )
   input$name_RI <- paste0("RI_", name_var)
 
   # Create TITLE:, ANALYSIS:, MONTECARLO:
@@ -94,16 +96,16 @@ powRICLPM_Mplus <- function(sample_size,
   # Create MODEL:
   Mplus_estimation <- rbind(
     Mplus_RI(input),
-    Mplus_RI_var(input, estimation = T),
-    Mplus_RI_cor(input, estimation = T),
+    Mplus_RI_var(input, estimation = TRUE),
+    Mplus_RI_cor(input, estimation = TRUE),
     Mplus_within(input),
-    Mplus_lagged(input, estimation = T),
-    Mplus_within_var1(input, estimation = T),
-    Mplus_within_cov1(input, estimation = T),
-    Mplus_within_var2(input, estimation = T),
-    Mplus_within_cov2(input, estimation = T),
+    Mplus_lagged(input, estimation = TRUE),
+    Mplus_within_var1(input, estimation = TRUE),
+    Mplus_within_cov1(input, estimation = TRUE),
+    Mplus_within_var2(input, estimation = TRUE),
+    Mplus_within_cov2(input, estimation = TRUE),
     Mplus_ME(input),
-    stringsAsFactors = F)
+    stringsAsFactors = FALSE)
 
   # Add Mplus command end
   Mplus_population$end <- Mplus_estimation$end <- ";"
@@ -171,10 +173,10 @@ Mplus_RI <- function(input) {
   op <- " BY "
   con <- "@1"
   rhs <- c(unlist(input$name_obs))
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
-Mplus_RI_var <- function(input, estimation = F) {
+Mplus_RI_var <- function(input, estimation = FALSE) {
   lhs <- input$name_RI
   op <- rhs <- rep("", times = input$k)
   if(estimation){
@@ -182,10 +184,10 @@ Mplus_RI_var <- function(input, estimation = F) {
   } else {
     con <- rep(paste0("@", 1 / (1 - input$ICC) - 1), times = input$k)
   }
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
-Mplus_RI_cor <- function(input, estimation = F) {
+Mplus_RI_cor <- function(input, estimation = FALSE) {
 
   # Create combinations of random intercept factors
   combn_RI <- t(combn(input$name_RI, 2))
@@ -199,7 +201,7 @@ Mplus_RI_cor <- function(input, estimation = F) {
     con <- paste0("@", input$RI_cor)
   }
   rhs <- combn_RI[, 2]
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
 Mplus_within <- function(input) {
@@ -207,10 +209,10 @@ Mplus_within <- function(input) {
   op <- rep(" BY ", times = length(input$name_within))
   con <- rep("@1", times = length(input$name_within))
   rhs <- c(unlist(input$name_obs))
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
-Mplus_lagged <- function(input, estimation = F) {
+Mplus_lagged <- function(input, estimation = FALSE) {
   # Create vector with outcomes
   lhs <- rep(c(t(input$name_within))[-(1:input$k)], each = input$k)
 
@@ -224,10 +226,10 @@ Mplus_lagged <- function(input, estimation = F) {
   # Create vector with predictors
   rhs <- c(apply(input$name_within[-input$time_points,], 1, rep, times = input$k))
 
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
-Mplus_within_var1 <- function(input, estimation = F) {
+Mplus_within_var1 <- function(input, estimation = FALSE) {
   lhs <- t(input$name_within[1, ])
   op <- rhs <- ""
   if(estimation){
@@ -235,7 +237,7 @@ Mplus_within_var1 <- function(input, estimation = F) {
   } else {
     con <- rep("@1", times = input$k)
   }
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
 Mplus_within_cov1 <- function(input, estimation = F) {
@@ -248,10 +250,10 @@ Mplus_within_cov1 <- function(input, estimation = F) {
     resCov <- c(input$wSigma[lower.tri(input$wSigma)]) # Get covariances
     con <- paste0("@", resCov)
   }
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
-Mplus_within_var2 <- function(input, estimation = F){
+Mplus_within_var2 <- function(input, estimation = FALSE){
   lhs <- c(unlist(input$name_within[-1, ]))
   op <- rhs <- ""
   if (estimation) {
@@ -259,10 +261,10 @@ Mplus_within_var2 <- function(input, estimation = F){
   } else {
     con <- rep(paste0("@", diag(input$Psi)), each = input$time_points - 1)
   }
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
-Mplus_within_cov2 <- function(input, estimation = F) {
+Mplus_within_cov2 <- function(input, estimation = FALSE) {
   # Create within-component combinations
   combn_within <- t(apply(input$name_within[-1,], 1, combn, m = 2))
 
@@ -276,13 +278,13 @@ Mplus_within_cov2 <- function(input, estimation = F) {
     resCov <- c(input$Psi[lower.tri(input$Psi)])
     con <- paste0("@", resCov)
   }
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 
 Mplus_ME <- function(input) {
   lhs <- c(unlist(input$name_obs))
   op <- rhs <- ""
   con <- rep("@0", times = length(input$name_obs))
-  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, rhs, con, stringsAsFactors = FALSE))
 }
 

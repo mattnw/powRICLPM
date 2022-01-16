@@ -1,4 +1,7 @@
-test_that("summary.powRICLPM() works", {
+test_that("powRICLPM_summary() works", {
+  # Create valid powRICLPM() input
+  Phi <- matrix(c(0.4, 0.15, 0.2, 0.3), ncol = 2, byrow = TRUE)
+  wSigma <- matrix(c(1, 0.3, 0.3, 1), ncol = 2, byrow = TRUE)
 
   # Create powRICLPM object for à priori power analysis
   output <- powRICLPM(target_power = 0.5,
@@ -16,7 +19,7 @@ test_that("summary.powRICLPM() works", {
                       seed = 123456)
 
   # Run tests
-  expect_error(summary(output), "Please provide a `parameter` argument. You can use the `names` function to get an overview of the parameter names in the powRICLPM object.")
-  expect_error(summary(output, parameter = "wB2~wB3"), "The specified parameter is not valid. Use `names.powRICLPM` to get an overview of parameter names in the powRICLPM object.")
-  expect_snapshot(cat(summary(output1, parameter = "wB2~wA1")))
+  expect_error(powRICLPM_summary(output), "Please provide a `parameter` argument. You can use the `powRICLPM_names` function to get an overview of the parameter names in the 'powRICLPM' object.")
+  expect_error(powRICLPM_summary(output, parameter = "wB2~wB3"), "The specified parameter is not valid. Use `powRICLPM_names` to get an overview of parameter names in the 'powRICLPM' object.")
+  expect_snapshot(cat(powRICLPM_summary(output, parameter = "wB2~wA1")))
 })

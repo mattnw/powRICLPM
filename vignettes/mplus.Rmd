@@ -6,7 +6,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-This vignette details how you can automatically create Mplus syntax for performing a power analysis for the random intercept cross-lagged panel model (RI-CLPM) using the Mplus software package. For example, you wish to simulate the power to detect a small cross-lagged effect $\gamma_{2}$ (i.e., the causal effect of $x_{1}^{*}$ to $y_{2}^{*}$, where $x_{1}^{*}$ to $y_{2}^{*}$ denote the latent within-unit components of $x_{1}$ and $y_{2}$, respectively) when using a sample size of 250 and 4 time points. 
+This vignette details how you can automatically create Mplus syntax for performing a power analysis for the random intercept cross-lagged panel model (RI-CLPM) using the Mplus software package. For example, you wish to simulate the power to detect a small cross-lagged effect $\gamma_{2}$ (defined here as the causal effect of $x_{1}^{*}$ to $y_{2}^{*}$, where $x_{1}^{*}$ to $y_{2}^{*}$ denote the latent within-unit components of $x_{1}$ and $y_{2}$, respectively) when using a sample size of 250 and 4 time points. 
 
 ## Preparation 
 Before performing the post hoc power analysis, you must carefully determine the *population parameter values*, as these values impact the validity of this power analysis. Therefore, it is recommended to base parameter values on previous research, theory, or expert knowledge. Specifically, the post hoc analysis function requires the specification of:
@@ -16,7 +16,7 @@ Before performing the post hoc power analysis, you must carefully determine the 
 - `Phi`: Standardized autoregressive and cross-lagged effects for the within-unit components of the model.
 - `wSigma`: Correlations between the within-unit components. 
 
-Details on how to decide on values for these population parameter values can be found in .... For our example, the parameter values are set to:
+Details on how to decide on values for these population parameter values can be found in LINK NAAR MIJN PAPER. For our example, the parameter values are set to:
 
 ```{r preparation}
 ICC <- 0.5
@@ -48,4 +48,4 @@ powRICLPM_Mplus(sample_size = 250,
                 save_path = "./saved")
 ```
 
-The `powRICLPM_Mplus()` creates an Mplus input file (a .txt file) and saves it to the specified directory. The file contains the Mplus model syntax needed to run a power analysis for the RI-CLPM in Mplus. More information about Monte Carlo simulations in Mplus can be found at [http://statmodel.com/download/usersguide/Chapter12.pdf](http://statmodel.com/download/usersguide/Chapter12.pdf).
+The `powRICLPM_Mplus()` creates an Mplus input file (a .txt file) and writes it to the specified directory. The file contains the Mplus model syntax needed to run a power analysis for the RI-CLPM in Mplus. More information about Monte Carlo simulations in Mplus can be found at [http://statmodel.com/download/usersguide/Chapter12.pdf](http://statmodel.com/download/usersguide/Chapter12.pdf).

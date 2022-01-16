@@ -37,8 +37,6 @@ powRICLPM_Mplus(
 \item{seed}{An integer of length 1. If multiple cores are used, a seed of length 1 will be used to generate a full L'Ecuyer-CMRG seed for all cores. For more information, see \code{\link[furrr]{furrr_options}}.}
 
 \item{save_path}{A character string naming the directory to save any (data) files to.}
-
-\item{syntax}{Logical indicating whether model syntax should be created.}
 }
 \value{
 A character containing the Mplus model syntax.
@@ -55,8 +53,8 @@ Details on the naming conventions can be found in the "Details" section of \code
 }
 \examples{
 # Define population parameters for lagged effects and within-component correlations
-Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = T)
-wSigma <- matrix(c(1 , .3, .3, 1) , ncol = 2, byrow = T)
+Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = TRUE)
+wSigma <- matrix(c(1 , .3, .3, 1) , ncol = 2, byrow = TRUE)
 Psi <- compute_Psi(Phi = Phi, wSigma = wSigma)
 
 # Create and save Mplus model syntax for Monte Carlo power analysis
@@ -69,5 +67,4 @@ powRICLPM_Mplus(sample_size = 300,
                 reps = 10000,
                 seed = 123456,
                 save_path = "./saved")
-
 }

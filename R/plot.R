@@ -5,13 +5,13 @@
 #' Plotting method for powRICLPM objects. This function visualizes results from à priori and post hoc powRICLPM analyses.
 #'
 #' @param x A powRICLPM object.
-#' @param y Phantom argument that has no influence on the plot produced. Included here to make the generic \code{plot()} a method for objects of class "powRICLPM".
-#' @inheritParams summary.powRICLPM
+#' @param y Phantom argument that has no influence on the plot produced. Included here to make the generic \code{plot()} a method for objects of class powRICLPM.
+#' @param parameter A character string denoting a single variable of interest. Use \code{\link{powRICLPM_names}} to get an overview of valid parameter names for the powRICLPM object.
 #'
 #' @examples
 #' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T)
-#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
+#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
+#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
 #'
 #' # Create powRICLPM object for à priori power analysis
 #' output <- powRICLPM(target_power = 0.5,
@@ -29,10 +29,10 @@
 #'                      seed = 123456)
 #'
 #' # Visualize results
-#' plot(output, parameter = "wB2~wA1")
+#' powRICLPM_plot(output, parameter = "wB2~wA1")
 #'
 #' @export
-plot.powRICLPM <- function(x, y = NULL, parameter = NULL) { browser()
+powRICLPM_plot <- function(x, y = NULL, parameter = NULL) {
 
   # Check arguments
   parameter <- check_parameter_summary(parameter, x)

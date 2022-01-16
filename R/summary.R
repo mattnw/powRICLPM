@@ -2,19 +2,19 @@
 #' powRICLPM Power Analysis Summary
 #'
 #' @description
-#' \code{summary.powRICLPM()} is a method for class "powRICLPM", summarizing the results of an à priori or post hoc powRICLPM simulation study.
+#' \code{powRICLPM_summary()} is a method for class powRICLPM, summarizing the results of an à priori or post hoc powRICLPM simulation study.
 #'
-#' @param object A "powRICLPM" object.
-#' @param ... Phantom argument that has no influence on the summary produced. Included here to make the generic \code{summary()} a method for objects of class "powRICLPM".
-#' @param parameter A character string denoting a single variable of interest. Use \code{\link{names.powRICLPM}} to get an overview of valid parameter names for the powRICLPM object.
+#' @param object A powRICLPM object.
+#' @param ... Phantom argument that has no influence on the summary produced.
+#' @param parameter A character string denoting a single variable of interest. Use \code{\link{powRICLPM_names}} to get an overview of valid parameter names for the powRICLPM object.
 #'
 #' @seealso
-#' \code{\link{names.powRICLPM}} to get an overview of valid parameter names included in the powRICLPM object.
+#' \code{\link{powRICLPM_names}} to get an overview of valid parameter names included in the powRICLPM object.
 #'
 #' @examples
 #' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T)
-#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
+#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
+#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
 #'
 #' # Create powRICLPM object for à priori power analysis
 #' output <- powRICLPM(target_power = 0.5,
@@ -32,9 +32,9 @@
 #'                      seed = 123456)
 #'
 #' # Summarize results
-#' summary(output, parameter = "wB2~wA1")
+#' powRICLPM_summary(output, parameter = "wB2~wA1")
 #' @export
-summary.powRICLPM <- function(object, ..., parameter = NULL) {
+powRICLPM_summary <- function(object, ..., parameter = NULL) {
 
   if (object$session$type == "apriori") {
 
@@ -55,20 +55,20 @@ summary.powRICLPM <- function(object, ..., parameter = NULL) {
     cat("\n", "- Target power: ", target_power)
 
     if(candidate == 0) { # No recommended sample size found
-      cat("\n", "- Preliminary recommended sample size: NOT FOUND", object$conditions[[candidate]]$sample_size)
+      cat("\n", "- Preliminary recommended sample size: NOT FOUND")
 
       cat("\n\n", "Sugested next steps:", sep = "")
       cat("\n", "- Increase search_upper and rerun the analysis.")
-      cat("\n", "- Use plot() to visualize preliminary results for entire range of sample sizes.")
+      cat("\n", "- Use powRICLPM_plot() to visualize preliminary results for entire range of sample sizes.")
 
     } else { # Recommended sample size found
 
       cat("\n", "- Preliminary recommended sample size: ", object$conditions[[candidate]]$sample_size)
-      cat("\n", "- Number of failed replications for recommended run: ", sum(object$conditions[[candidate]]$fails))
+      cat("\n", "- Number of non-converged replications for recommended run: ", sum(object$conditions[[candidate]]$not_converged))
+      cat("\n", "- Number of replications with inadmissible estimates for recommended run: ", sum(object$conditions[[candidate]]$inadmissible))
 
       cat("\n\n", "Sugested next steps:", sep = "")
-      cat("\n", "- Use plot() to visualize preliminary results for entire range of sample sizes.")
-      cat("\n", "- Use plot() to visualize number of failed replications for entire range of sample size.")
+      cat("\n", "- Use powRICLPM_plot() to visualize preliminary results for entire range of sample sizes.")
       cat("\n", "- Rerun powRICLPM with the recommended sample size and large number of replications to validate preliminary results.")
     }
 
@@ -77,19 +77,19 @@ summary.powRICLPM <- function(object, ..., parameter = NULL) {
     if (is.null(parameter)) {
 
       # Display general results
-      cat("\n", "Post hoc powRICLPM-analysis completed:", , sep = "")
+      cat("\n", "Post hoc powRICLPM-analysis completed:", sep = "")
       cat("\n", "- Monte Carlo replications: ", object$session$reps)
       cat("\n", "- Proportion random intercept variance:", object$session$ICC)
       cat("\n", "- Sample sizes (min. - max.):", min(object$session$sample_size), "-", max(object$session$sample_size))
       cat("\n", "- Time points (min. - max.):", min(object$session$time_points), "-", max(object$session$time_points))
 
       cat("\n\n", "Suggestions:", sep = "")
-      cat("\n", "- Specify the `parameter` argument in the summary() function to obtain detailed results for a specific parameter.")
-      cat("\n", "- Use plot() to visualize the power across all conditions.")
+      cat("\n", "- Specify the `parameter` argument in the powRICLPM_summary() function to obtain detailed results for a specific parameter.")
+      cat("\n", "- Use powRICLPM_plot() to visualize the power across all conditions.")
     } else {
 
       # Print summary title
-      cat("\n", "Post hoc powRICLPM-analysis results for parameter" , parameter, ":\n", sep = "")
+      cat("\n", "Post hoc powRICLPM-analysis results for parameter " , parameter, ":\n\n", sep = "")
 
       # Print MCMC power analysis results for specified parameter
       print(
@@ -106,22 +106,22 @@ summary.powRICLPM <- function(object, ..., parameter = NULL) {
 }
 
 #' @title
-#' Get Parameter Names From powRICLPM-Object
+#' Get Parameter Names From "powriclpm-Object
 #'
 #' @description
-#' \code{\link{names.powRICLPM}} gets the names of the variables that are internally created by the powRICLPM package. Details about the naming conventions can be found in the "Details" section of \code{\link{powRICLPM}}.
+#' \code{\link{powRICLPM_names}} gets the names of the variables that are internally created by the powRICLPM package. Details about the naming conventions can be found in the "Details" section of \code{\link{powRICLPM}}.
 #'
-#' @param x A "powRICLPM" object.
+#' @param x A powRICLPM object.
 #' @param max_set A logical indicating if the parameter names from the condition with the largest number of parameters should be returned. When simulating the power for conditions with varying number of time points, then there are different numbers of parameters over the conditions. By default, this function returns the parameter names from the condition with the smallest number of parameters, such that the returned parameter names are valid for each condition.
 #'
 #' @return A character vector with the names of the variables internally created by the powRICLPM package.
 #'
-#' @seealso \code{\link{summary.powRICLPM}}
+#' @seealso \code{\link{powRICLPM_summary}}
 #'
 #' @examples
 #' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T)
-#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
+#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
+#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
 #'
 #' # Create powRICLPM object for à priori power analysis
 #' output <- powRICLPM(target_power = 0.5,
@@ -139,9 +139,9 @@ summary.powRICLPM <- function(object, ..., parameter = NULL) {
 #'                      seed = 123456)
 #'
 #' # Get names of internally created parameters
-#' names(output)
+#' powRICLPM_names(output)
 #' @export
-names.powRICLPM <- function(x, max_set = F) {
+powRICLPM_names <- function(x, max_set = FALSE) {
 
   # Determine number of parameters per condition
   condition_length <- purrr::map_int(x$conditions, function(x) {

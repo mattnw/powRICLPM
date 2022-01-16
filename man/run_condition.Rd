@@ -32,7 +32,12 @@ To successfully run a Monte Carlo simulation, the "object" arguments needs the f
 \subsection{Output}
 This function adds the following two elements to "object":
 \itemize{
-  \item \code{results}: A data frame containing the results (i.e., population values, bias, standard error of the estimate, 95% coverage, power, etc.), and
-  \item \code{fail}: A logical vector denoting the Monte Carlo replications that resulted in negative variances, non-positive definite matrices, or fatal errors.
+  \item \code{results}: A data frame containing the results (i.e., population values, bias, standard error of the estimate, 95% coverage, power, etc.),
+  \item \code{errors}: A logical vector denoting failed Monte Carlo replications,
+  \item \code{not_converged}: A logical vector denoting non-converged Monte Carlo replications, and
+  \item \code{inadmissible} A logical vector denoting Monte Carlo replications that resulted in negative variances or non-positive definite matrices.
 }
+
+\subsection{Save}
+This function has the option to save all generated datasets.
 }

@@ -16,28 +16,13 @@
 #'
 #' \subsection{Naming conventions}
 #' Details on the naming conventions can be found in the "Details" section of \code{\link{powRICLPM}}.
-#'
-#' @examples
-#' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = T)
-#' wSigma <- matrix(c(1 , .3, .3, 1) , ncol = 2, byrow = T)
-#' Psi <- compute_Psi(Phi = Phi, wSigma = wSigma)
-#'
-#' # Create lavaan model syntax for data generation
-#' syntax <- create_lavaan(time_points = 3,
-#'                         ICC = 0.5,
-#'                         RI_cor = 0.3,
-#'                         Phi = Phi,
-#'                         wSigma = wSigma,
-#'                         Psi = Psi,
-#'                         syntax = F)
 create_lavaan <- function(time_points,
                           ICC = NULL,
                           RI_cor = NULL,
                           Phi = NULL,
                           wSigma = NULL,
                           Psi = NULL,
-                          syntax = F) {
+                          syntax = FALSE) {
   # Save all arguments to list
   input <- as.list(environment())
 
@@ -48,8 +33,12 @@ create_lavaan <- function(time_points,
   name_var <- LETTERS[1:input$k]
 
   # Create matrix of names for observed variable, within, and between components
-  input$name_obs <- purrr::map_dfc(name_var, paste0, 1:time_points)
-  input$name_within <- purrr::map_dfc(name_var, function(x) { paste0("w", x, 1:time_points)})
+  input$name_obs <- suppressMessages(
+    purrr::map_dfc(name_var, paste0, 1:time_points)
+  )
+  input$name_within <- suppressMessages(
+    purrr::map_dfc(name_var, function(x) { paste0("w", x, 1:time_points)})
+  )
   input$name_RI <- paste0("RI_", name_var)
 
   # Create parameter table
@@ -91,7 +80,7 @@ lav_RI <- function(input) {
   pv <- rep("1", times = input$k*input$time_points)
   con <- rep("*", times = input$k*input$time_points)
   rhs <- c(unlist(input$name_obs))
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_RI_var <- function(input) {
@@ -103,7 +92,7 @@ lav_RI_var <- function(input) {
     pv <- rep((1 / (1 - input$ICC) - 1), times = input$k)
     con <- rep("*", times = input$k)
   }
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_RI_cor <- function(input) {
@@ -120,7 +109,7 @@ lav_RI_cor <- function(input) {
     con <- "*"
   }
   rhs <- combnRI[, 2]
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_within <- function(input) {
@@ -129,7 +118,7 @@ lav_within <- function(input) {
   pv <- rep("1", times = length(input$name_within))
   con <- "*"
   rhs <- c(unlist(input$name_obs))
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_lagged <- function(input) {
@@ -142,7 +131,7 @@ lav_lagged <- function(input) {
     con <- "*"
   }
   rhs <- c(apply(input$name_within[-input$time_points,], 1, rep, times = input$k))
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_within_var1 <- function(input) {
@@ -154,7 +143,7 @@ lav_within_var1 <- function(input) {
     pv <- rep("1", times = input$k)
     con <- "*"
   }
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_within_cov1 <- function(input) {
@@ -164,10 +153,10 @@ lav_within_cov1 <- function(input) {
   if (is.null(input$wSigma)) {
     pv <- con <- rep("", times = 1)
   } else {
-    pv <- c(wSigma[lower.tri(input$wSigma)]) # Get covariances
+    pv <- c(input$wSigma[lower.tri(input$wSigma)]) # Get covariances
     con <- "*"
   }
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_within_var2 <- function(input) {
@@ -179,7 +168,7 @@ lav_within_var2 <- function(input) {
     pv <- rep(diag(input$Psi), each = (input$time_points - 1))
     con <- "*"
   }
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_within_cov2 <- function(input) {
@@ -197,7 +186,7 @@ lav_within_cov2 <- function(input) {
     pv <- c(input$Psi[lower.tri(input$Psi)])
     con <- "*"
   }
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 
 lav_ME <- function(input) {
@@ -205,6 +194,6 @@ lav_ME <- function(input) {
   op <- rep("~~", times = length(input$name_obs))
   pv <- rep("0", times = length(input$name_obs))
   con <- "*"
-  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = F))
+  return(cbind.data.frame(lhs, op, pv, con, rhs, stringsAsFactors = FALSE))
 }
 

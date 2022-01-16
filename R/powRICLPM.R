@@ -33,7 +33,7 @@
 #' Data is generated and analyzed using \pkg{lavaan}. To speed up the process, power analysis for different conditions can be run in parallel (implemented using \pkg{furrr}).
 #'
 #' @return
-#' An object of class "powRICLPM" is a list containing a "conditions" and "session" element. The "condition" element is again a list, where each element is itself a list containing elements needed to run a power analysis for a specific condition. This includes:
+#' A list containing a "conditions" and "session" element. The "condition" element is again a list, where each element is itself a list containing elements needed to run a power analysis for a specific condition. This includes:
 #'
 #' \itemize{
 #'   \item \code{sample_size}: The sample size.
@@ -49,7 +49,7 @@
 #'   \item \code{fails}: Logical vector indicating failed MCMC reps.
 #' }
 #'
-#' The "session" element in an "powRICLPM" object is a list containing information common to all conditions. For à priori analyses, this includes:
+#' The "session" element is a list containing information common to all conditions. For à priori analyses, this includes:
 #' \itemize{
 #'   \item \code{type}: The type of power analysis performed.
 #'   \item \code{target_power}: The desired power level.
@@ -70,14 +70,15 @@
 #' }
 #'
 #' @author Jeroen D. Mulder \email{j.d.mulder@@uu.nl}
+#' @export
 #'
 #' @seealso
-#' \code{\link{powRICLPM_Mplus}} to create syntax for RI-CLPM power analysis in Mplus, \code{\link{plot.powRICLPM}} to visualize results of a powRICLPM analysis, and \code{\link{summary.powRICLPM}} to summarize results of powRICLPM analysis.
+#' \code{\link{powRICLPM_Mplus}} to create syntax for RI-CLPM power analysis in Mplus, \code{\link{powRICLPM_plot}} to visualize results of a powRICLPM analysis, and \code{\link{powRICLPM_summary}} to summarize results of powRICLPM analysis.
 #'
 #' @examples
 #' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T)
-#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
+#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
+#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
 #'
 #' # Option 1 - À priori power analysis
 #' output1 <- powRICLPM(target_power = 0.5,
@@ -94,7 +95,7 @@
 #'                      cores = 1,
 #'                      seed = 123456)
 #'
-#' # Option 2 - Post hoc power analysis#'
+#' # Option 2 - Post hoc power analysis
 #' output2 <- powRICLPM(sample_size = c(250, 350, 400),
 #'                      time_points = c(3, 4),
 #'                      ICC = 0.5,
@@ -102,10 +103,8 @@
 #'                      Phi = Phi,
 #'                      wSigma = wSigma,
 #'                      reps = 100,
-#'                      cores = 4,
+#'                      cores = 1,
 #'                      seed = 123456)
-#'
-#' @export
 powRICLPM <- function(target_power = NULL,
                       parameter = NULL,
                       search_lower = NULL,
@@ -176,7 +175,5 @@ powRICLPM <- function(target_power = NULL,
                       save_path = save_path)
   }
 
-  # Make the list of simulation results (from different conditions) a powRICLPM-object
-  class(output) <- "powRICLPM"
   return(output)
 }

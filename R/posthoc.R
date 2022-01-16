@@ -21,7 +21,7 @@ posthoc <- function(sample_size,
                          Phi = Phi,
                          wSigma = wSigma,
                          Psi = Psi,
-                         syntax = T)
+                         syntax = TRUE)
 
   # Create lavaan parameter table for population model
   pop_tab <- purrr::map(time_points, create_lavaan,
@@ -32,7 +32,7 @@ posthoc <- function(sample_size,
                         Psi = Psi)
 
   # Create lavaan syntax for estimating the model
-  est_synt <- purrr::map(time_points, create_lavaan, syntax = T)
+  est_synt <- purrr::map(time_points, create_lavaan, syntax = TRUE)
 
   # Create lavaan parameter table for estimating model
   est_tab <- purrr::map(time_points, create_lavaan)
@@ -72,15 +72,13 @@ posthoc <- function(sample_size,
   } else {
     future::plan(future::multisession, workers = cores)
     object$conditions <- furrr::future_map(object$conditions, run_condition,
-                                .options = furrr::furrr_options(seed = seed))
+                                .options = furrr::furrr_options(seed = seed),
+                                .progress = TRUE)
     future::plan(future::sequential)
   }
 
   # Display results for a specific parameter
-  summary.powRICLPM(object = object)
-
-  # Make object of type `powRICLPM`
-  class(object) <- "powRICLPM"
+  powRICLPM_summary(object = object)
 
   return(object)
 }

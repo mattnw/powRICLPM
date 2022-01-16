@@ -20,5 +20,12 @@ VignetteBuilder: knitr
 Imports: 
     lavaan (>= 0.6.7),
     plyr (>= 1.8.5),
-    data.table (>= 1.12.8)
+    data.table (>= 1.12.8),
+    furrr,
+    future,
+    ggplot2,
+    parallelly,
+    purrr,
+    stats,
+    utils
 Config/testthat/edition: 3

@@ -23,13 +23,18 @@
 #' \subsection{Output}
 #' This function adds the following two elements to "object":
 #' \itemize{
-#'   \item \code{results}: A data frame containing the results (i.e., population values, bias, standard error of the estimate, 95% coverage, power, etc.), and
-#'   \item \code{fail}: A logical vector denoting the Monte Carlo replications that resulted in negative variances, non-positive definite matrices, or fatal errors.
+#'   \item \code{results}: A data frame containing the results (i.e., population values, bias, standard error of the estimate, 95% coverage, power, etc.),
+#'   \item \code{errors}: A logical vector denoting failed Monte Carlo replications,
+#'   \item \code{not_converged}: A logical vector denoting non-converged Monte Carlo replications, and
+#'   \item \code{inadmissible} A logical vector denoting Monte Carlo replications that resulted in negative variances or non-positive definite matrices.
 #' }
+#'
+#' \subsection{Save}
+#' This function has the option to save all generated datasets.
 #'
 #' @return A list.
 #'
-#' @importFrom lavaan simulateData inspect parameterEstimates coef
+#' @importFrom lavaan simulateData inspect parameterEstimates coef lavaan
 #' @importFrom data.table fwrite
 run_condition <- function(object) {
   # Number of variables
@@ -51,10 +56,10 @@ run_condition <- function(object) {
 
   # Allocate memory for results
   coefs <- SEs <- low95 <- up95 <- matrix(NA, nrow = n_parameters, ncol = object$reps)
-  sigs <- cover95 <- matrix(F, nrow = n_parameters, ncol = object$reps)
+  sigs <- cover95 <- matrix(FALSE, nrow = n_parameters, ncol = object$reps)
 
-  # Initialize fail counter and index
-  fails <- rep(F, times = object$reps)
+  # Initialize indeces for estimation problems
+  errors <- warnings <- not_converged <- inadmissible <- rep(FALSE, times = object$reps)
 
   # Create folder for saving data
   if(!is.na(object$save_path)) {
@@ -66,8 +71,9 @@ run_condition <- function(object) {
     dir.create(save_path)
   }
 
-  # Create lavaan wrapper that captures unintended side-effects (preventing fatal errors)
-  possibly_lavaan <- purrr::possibly(lavaan::lavaan, otherwise = NA)
+  # Create lavaan function for safe and quiet error and warning handling
+  safe_quiet_lavaan <- purrr::safely(purrr::quietly(lavaan::lavaan))
+  quiet_lavInspect <- purrr::quietly(lavaan::lavInspect)
 
   # Start simulation
   for (r in 1:object$reps) {
@@ -78,55 +84,73 @@ run_condition <- function(object) {
     if(!is.na(object$save_path)) {
       fwrite(dat,
              file = file.path(object$save_path, paste0("df", r, ".dat")),
-             sep = "\t", col.names = F, row.names = F, na = "-999")
+             sep = "\t", col.names = FALSE, row.names = FALSE, na = "-999")
     }
 
     # Fit model
-    fit <- suppressWarnings(
-      possibly_lavaan(object$est_synt, dat)
-    )
+    fit <- safe_quiet_lavaan(object$est_synt, data = dat)
 
-    # Check negative variances, non-positive definite matrices, or fatal errors
-    if (!inspect(fit, "post.check") || !isS4(fit)) {
-      fails[r] <- T
+    # Check if fatal error occurred
+    if (!is.null(fit$error)) {
+      errors[r] <- TRUE
       next
     }
 
+    if (!identical(fit$result$warnings, character(0))) {
+
+      # Check if solution converged
+      if (!inspect(fit$result$result, what = "converged")) {
+        not_converged[r] <- TRUE
+      }
+
+      # Check if parameter estimates are admissible
+      if (quiet_lavInspect(fit$result$result, what = "post.check")$result != TRUE) {
+        inadmissible[r] <- TRUE
+      }
+    }
+
     # Get estimates
-    coefs[, r] <- coef(fit) # Save coefficients
-    SEs[, r] <- parameterEstimates(fit, remove.nonfree = T)$se # Save standard errors
-    sigs[, r] <- parameterEstimates(fit, remove.nonfree = T)$pvalue < .05
-    low95[, r] <- parameterEstimates(fit, remove.nonfree = T)$ci.lower
-    up95[, r] <- parameterEstimates(fit, remove.nonfree = T)$ci.upper
+    coefs[, r] <- coef(fit$result$result) # Save coefficients
+    SEs[, r] <- parameterEstimates(fit$result$result, remove.nonfree = TRUE)$se # Save standard errors
+    sigs[, r] <- parameterEstimates(fit$result$result, remove.nonfree = TRUE)$pvalue < .05
+    low95[, r] <- parameterEstimates(fit$result$result, remove.nonfree = TRUE)$ci.lower
+    up95[, r] <- parameterEstimates(fit$result$result, remove.nonfree = TRUE)$ci.upper
   }
 
   # Create and save repList
   if(!is.na(object$save_path)) {
     df_list <- paste0("df", 1:object$reps, ".dat")
 
-    # Delete names of failed replications
-    if(sum(fails) != 0) {
-      df_list <- df_list[-which(fails == T)]
+    # Delete names of non-converged replications
+    if(sum(not_converged) != 0) {
+      df_list <- df_list[-which(not_converged)]
     }
 
-    # Save list of generated data sets
+    # Save list of generated data setss
     fwrite(as.list(df_list),
            file = file.path(save_path, "dfList.dat"),
-           sep = "\n", col.names = F, row.names = F)
+           sep = "\n", col.names = FALSE, row.names = FALSE)
   }
 
   # Compute simulation results
-  successes <- object$reps - sum(fails)
-  avg <- rowMeans(coefs, na.rm = T)
-  stdDev <- apply(coefs, 1, sd, na.rm = T)
-  SEAvg <- rowMeans(SEs, na.rm = T)
-  mse <- rowMeans((coefs - pv)^2, na.rm = T)
-  cover95 <- rowSums(pv > low95 & pv < up95, na.rm = T) / successes
-  sig <- rowSums(sigs, na.rm = T) / successes
+  converged_reps <- object$reps - sum(not_converged)
+  avg <- rowMeans(coefs, na.rm = TRUE)
+  stdDev <- apply(coefs, 1, stats::sd, na.rm = TRUE)
+  SEAvg <- rowMeans(SEs, na.rm = TRUE)
+  mse <- rowMeans((coefs - pv)^2, na.rm = TRUE)
+  cover95 <- rowSums(pv > low95 & pv < up95, na.rm = TRUE) / converged_reps
+  sig <- rowSums(sigs, na.rm = TRUE) / converged_reps
 
   # Bind results of this particular scenario and add to object
   object$results <- data.frame(par, pv, avg, stdDev, SEAvg, mse, cover95, sig)
-  object$fails <- fails
+  object$errors <- errors
+  object$not_converged <- not_converged
+  object$inadmissible <- inadmissible
 
   return(object)
 }
+
+
+
+
+

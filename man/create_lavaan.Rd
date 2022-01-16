@@ -11,7 +11,7 @@ create_lavaan(
   Phi = NULL,
   wSigma = NULL,
   Psi = NULL,
-  syntax = F
+  syntax = FALSE
 )
 }
 \arguments{
@@ -41,19 +41,4 @@ If lavaan model syntax needs to be created for data generation, the user must pr
 
 \subsection{Naming conventions}
 Details on the naming conventions can be found in the "Details" section of \code{\link{powRICLPM}}.
-}
-\examples{
-# Define population parameters for lagged effects and within-component correlations
-Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = T)
-wSigma <- matrix(c(1 , .3, .3, 1) , ncol = 2, byrow = T)
-Psi <- compute_Psi(Phi = Phi, wSigma = wSigma)
-
-# Create lavaan model syntax for data generation
-syntax <- create_lavaan(time_points = 3,
-                        ICC = 0.5,
-                        RI_cor = 0.3,
-                        Phi = Phi,
-                        wSigma = wSigma,
-                        Psi = Psi,
-                        syntax = F)
 }

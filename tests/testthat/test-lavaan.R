@@ -1,8 +1,8 @@
 test_that("lavaan model syntax creation works", {
   # Create valid create_lavaan() input
-  Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = T)
-  wSigma <- matrix(c(1 , .3, .3, 1), ncol = 2, byrow = T)
-  Psi <- matrix(c(0.71, -0.037, -0.037, 0.47), ncol = 2, byrow = T)
+  Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = TRUE)
+  wSigma <- matrix(c(1 , .3, .3, 1), ncol = 2, byrow = TRUE)
+  Psi <- matrix(c(0.71, -0.037, -0.037, 0.47), ncol = 2, byrow = TRUE)
 
   # Generate lavaan parameter table
   pop_tab <- create_lavaan(time_points = 4,
@@ -11,7 +11,7 @@ test_that("lavaan model syntax creation works", {
                               Phi = Phi,
                               wSigma = wSigma,
                               Psi = Psi,
-                              syntax = F)
+                              syntax = FALSE)
 
   # Generate lavaan model syntax
   pop_synt <- create_lavaan(time_points = 3,
@@ -20,11 +20,11 @@ test_that("lavaan model syntax creation works", {
                               Phi = Phi,
                               wSigma = wSigma,
                               Psi = Psi,
-                              syntax = T)
+                              syntax = TRUE)
 
   # Create lavaan syntax for estimating a model
   est_synt <- create_lavaan(time_points = 3,
-                            syntax = T)
+                            syntax = TRUE)
 
   # Create lavaan parameter table for estimating model
   est_tab <- create_lavaan(time_points = 3)

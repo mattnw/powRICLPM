@@ -1,5 +1,5 @@
-check_PD <- function(x, unit = F){
-  x_eigen <- eigen(x, only.values = T)$values # Compute eigenvalues
+check_PD <- function(x, unit = FALSE){
+  x_eigen <- eigen(x, only.values = TRUE)$values # Compute eigenvalues
   if (is.complex(x_eigen)){
     if (any(Re(x_eigen) < 0) | any(Im(x_eigen) < 0)) {
       stop("Complex eigenvalues: Matrix is not positive definite.")
@@ -94,13 +94,13 @@ check_Phi <- function(x) {
     stop("`Phi` should be of type `matrix`.")
   }
 
-  x <- check_PD(x, unit = T)
+  x <- check_PD(x, unit = TRUE)
   return(x)
 }
 
 check_cores <- function(x) {
   # Check number of available logical cores
-  available_cores <- parallelly::availableCores(logical = T)
+  available_cores <- parallelly::availableCores(logical = TRUE)
 
   # Check if argument matches CPU specifications
   if (!is.null(x)) {
@@ -146,20 +146,21 @@ check_parameter <- function(x) {
       stop("`parameter` should be a character string specifying the parameter of interest.")
     }
   }
+  return(x)
 }
 
 check_parameter_summary <- function(parameter, object) {
   # Include checks additional to general check_parameter()
   if (is.null(parameter)) {
 
-    stop("Please provide a `parameter` argument. You can use the `names` function to get an overview of the parameter names in the powRICLPM object.")
+    stop("Please provide a `parameter` argument. You can use the `powRICLPM_names` function to get an overview of the parameter names in the 'powRICLPM' object.")
 
   } else {
-    if (parameter %in% setdiff(names.powRICLPM(object), names.powRICLPM(object, max_set = T))) {
+    if (parameter %in% setdiff(powRICLPM_names(object), powRICLPM_names(object, max_set = TRUE))) {
       stop("The specified parameter is not a valid parameter for all conditions.")
     }
-    if (!parameter %in% names.powRICLPM(object)) {
-      stop("The specified parameter is not valid. Use `names.powRICLPM` to get an overview of parameter names in the powRICLPM object.")
+    if (!parameter %in% powRICLPM_names(object)) {
+      stop("The specified parameter is not valid. Use `powRICLPM_names` to get an overview of parameter names in the 'powRICLPM' object.")
     }
     check_parameter(parameter)
   }
@@ -183,8 +184,8 @@ check_search <- function(lower, upper, step) {
   if(upper < lower) {
     stop("`search_upper` should be higher than `search_lower`.")
   }
-  if(step >= (upper - lower)) {
-    stop("`search_step` should be smaller than the interval between `search_lower` and `search_upper`.")
+  if(step > (upper - lower)) {
+    stop("`search_step` should be smaller than or equal to the interval between `search_lower` and `search_upper`.")
   }
   return(invisible())
 }

@@ -10,15 +10,15 @@ test_that("check_T() works", {
 # Test check_PD() ----
 test_that("check_PD() works", {
   # Create sample matrices
-  m1 <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = T)
-  m2 <- matrix(c(.3, .4, .3, .2), ncol = 2, byrow = T)
-  m3 <- matrix(c(1.2, .4, .3, 1.5), ncol = 2, byrow = T)
-  m4 <- matrix(c(.3, .4, -.3, .2), ncol = 2, byrow = T)
+  m1 <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
+  m2 <- matrix(c(.3, .4, .3, .2), ncol = 2, byrow = TRUE)
+  m3 <- matrix(c(1.2, .4, .3, 1.5), ncol = 2, byrow = TRUE)
+  m4 <- matrix(c(.3, .4, -.3, .2), ncol = 2, byrow = TRUE)
 
-  expect_equal(check_PD(m1, unit = T), m1)
-  expect_error(check_PD(m2, unit = T), "Matrix is not positive definite.")
-  expect_error(check_PD(m3, unit = T), "Eigenvalues are not within unit circle.")
-  expect_error(check_PD(m4, unit = T), "Complex eigenvalues: Matrix is not positive definite.")
+  expect_equal(check_PD(m1, unit = TRUE), m1)
+  expect_error(check_PD(m2, unit = TRUE), "Matrix is not positive definite.")
+  expect_error(check_PD(m3, unit = TRUE), "Eigenvalues are not within unit circle.")
+  expect_error(check_PD(m4, unit = TRUE), "Complex eigenvalues: Matrix is not positive definite.")
 })
 
 # Test check_N() ----
@@ -29,18 +29,18 @@ test_that("check_N() works", {
 })
 
 # Test check_RI() ----
-test_that("check_RI() works", {
-  expect_equal(check_RI(0.5), 0.5)
-  expect_error(check_RI(2), "`prop_RI` should be between 0 and 1.")
-  expect_error(check_RI("0.5"), "Elements in `prop_RI` should be of type `double`.")
+test_that("check_ICC() works", {
+  expect_equal(check_ICC(0.5), 0.5)
+  expect_error(check_ICC(2), "`ICC` should be between 0 and 1.")
+  expect_error(check_ICC("0.5"), "Elements in `ICC` should be of type `double`.")
 })
 
 # Test check_wSigma() ----
 test_that("check_wSigma() works", {
   # Create sample matrices
-  m1 <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = T)
-  m2 <- matrix(c(.3, .4, .3, .2), ncol = 2, byrow = T)
-  m3 <- matrix(c(1, 2, 2, 1), ncol = 2, byrow = T)
+  m1 <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
+  m2 <- matrix(c(.3, .4, .3, .2), ncol = 2, byrow = TRUE)
+  m3 <- matrix(c(1, 2, 2, 1), ncol = 2, byrow = TRUE)
 
   expect_equal(check_wSigma(m1), m1)
   expect_error(check_wSigma(m2), "`wSigma` should be correlation matrix; 1's on the diagonal.")
@@ -51,8 +51,8 @@ test_that("check_wSigma() works", {
 # Test check_Phi() ----
 test_that("check_Phi() works", {
   # Create sample matrices
-  m1 <- matrix(c(.3, .2, .15, .2), ncol = 2, byrow = T)
-  m2 <- matrix(c(.8, .5, .4, .9), ncol = 2, byrow = T)
+  m1 <- matrix(c(.3, .2, .15, .2), ncol = 2, byrow = TRUE)
+  m2 <- matrix(c(.8, .5, .4, .9), ncol = 2, byrow = TRUE)
 
   expect_equal(check_Phi(m1), m1)
   expect_error(check_Phi("m1"), "`Phi` should be of type `matrix`.")
@@ -94,7 +94,7 @@ test_that("check_reps() works", {
 test_that("check_search() works", {
   expect_invisible(check_search(100, 2000, 50))
   expect_error(check_search(2000, 100, 50), "`search_upper` should be higher than `search_lower`.")
-  expect_error(check_search(100, 2000, 5000), "`search_step` should be smaller than the interval between `search_lower` and `search_upper`.")
+  expect_error(check_search(100, 2000, 5000), "`search_step` should be smaller than or equal to the interval between `search_lower` and `search_upper`.")
   expect_error(check_search("100", 2000, 50), "`search_lower`, `search_upper`, and `search_step` should be of type `numeric`.")
 })
 
@@ -104,3 +104,4 @@ test_that("check_target() works", {
   expect_error(check_target("0.80"), "`target` should be of type `numeric`.")
   expect_error(check_target(1.4), "`target` should be between 0 and 1.")
 })
+
