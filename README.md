@@ -13,21 +13,27 @@ status](https://www.r-pkg.org/badges/version/powRICLPM)](https://CRAN.R-project.
 
 `powRICLPM` is an `R` package that performs a power analysis for the
 random intercept cross-lagged panel model (RI-CLPM) in a simple and
-use-friendly way. It has three main functionalities:
+use-friendly way. Its main functionalities are:
 
-1.  Perform an [à priori power analysis]() to get a preliminary sample
-    size recommendation for detecting an effect of interest with the
-    desired power level.
-2.  Perform a [post hoc power analysis]() to investigate the performance
-    of the RI-CLPM (w.r.t. a parameter of interest) under various
-    conditions (i.e., under various sample sizes and number of repeated
-    measures).
-3.  Create Mplus syntax for performing a power analysis for the RI-CLPM
-    using Mplus.
+1.  [Perform a power
+    analysis](https://jeroendmulder.github.io/powRICLPM/articles/analysis.html)
+    to obtain sample size recommendations (as well as other performance
+    measures, such as bias, mean square error, etc.) for a desired power
+    level for a specific parameter. This can be done across multiple
+    experimental conditions simultaneously (i.e., across varying numbers
+    of repeated measures, proportions of between-unit variance, etc.).
+2.  [Summarize and visualize power analysis
+    results](https://jeroendmulder.github.io/powRICLPM/reference/visualization.html).
+3.  [Create Mplus
+    syntax](https://jeroendmulder.github.io/powRICLPM/articles/mplus.html)
+    for performing a power analysis for the RI-CLPM using Mplus.
 
 User guides for the above functionalities can be found in vignettes
 under the ‘Articles’ tab. Technical details on the implementation of the
-power analysis can be found in LINK NAAR PAPER.
+power analysis can be found in the package’s and functions’
+documentation. A rationale for the implemented power analysis strategy
+here, as well as an illustrative example and extensions to extensions of
+the RI-CLPM, see Mulder (forthcoming).
 
 ## Installation
 
@@ -42,9 +48,9 @@ devtools::install_github("jeroendmulder/powRICLPM")
 
 Every user-facing function in the package is documented, and the
 documentation can be accessed by running `?function_name` in the R
-console, e.g., `?powRICLPM`. Furthermore, there are three main vignettes
-(accessable via the ‘Articles’ tab), describing the three main
-functionalities of this package, as described above.
+console, e.g., `?powRICLPM`. Furthermore, there are four main vignettes
+(accessible via the ‘Articles’ tab), describing functionalities and
+analysis options of this package.
 
 ## Citing `powRICLPM`
 

@@ -22,11 +22,11 @@ knitr::opts_chunk$set(
 
 `powRICLPM` is an `R` package that performs a power analysis for the random intercept cross-lagged panel model (RI-CLPM) in a simple and use-friendly way. Its main functionalities are:
 
-1. [Recommend a sample size](https://jeroendmulder.github.io/powRICLPM/articles/recommend.html) for a desired power level for a specific parameter.
-2. [Obtain performance measures](https://jeroendmulder.github.io/powRICLPM/articles/performance.html) (e.g., bias, mean square error, etc.) for parameters across simulation conditions with varying sample size, number of time points, and proportion of between-unit variance.
+1. [Perform a power analysis](https://jeroendmulder.github.io/powRICLPM/articles/analysis.html) to obtain sample size recommendations (as well as other performance measures, such as bias, mean square error, etc.) for a desired power level for a specific parameter. This can be done across multiple experimental conditions simultaneously (i.e., across varying numbers of repeated measures, proportions of between-unit variance, etc.).
+2. [Summarize and visualize power analysis results](https://jeroendmulder.github.io/powRICLPM/reference/visualization.html).
 3. [Create Mplus syntax](https://jeroendmulder.github.io/powRICLPM/articles/mplus.html) for performing a power analysis for the RI-CLPM using Mplus. 
 
-User guides for the above functionalities can be found in vignettes under the 'Articles' tab. Technical details on the implementation of the power analysis can be found in LINK NAAR PAPER. 
+User guides for the above functionalities can be found in vignettes under the 'Articles' tab. Technical details on the implementation of the power analysis can be found in the package's and functions' documentation. A rationale for the implemented power analysis strategy here, as well as an illustrative example and extensions to extensions of the RI-CLPM, see Mulder (forthcoming).  
 
 ## Installation
 
