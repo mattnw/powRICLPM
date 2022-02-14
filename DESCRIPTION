@@ -1,11 +1,11 @@
 Package: powRICLPM
-Version: 0.1.0
+Version: 0.2.0
 Date: 2021-10-15
 Title: Power analysis for the random intercept cross-lagged panel model
 Authors@R: person("Jeroen", "Mulder", email = "j.d.mulder@uu.nl",
   role = c("aut", "cre"), comment = c(ORCID = "0000-0002-5553-0856"))
 Maintainer: Jeroen Mulder <j.d.mulder@uu.nl>
-Description: Perform à priori and post hoc power analyses for the random intercept cross-lagged panel model (RI-CLPM).
+Description: Perform user-friendly power analyses for the random intercept cross-lagged panel model (RI-CLPM).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -13,18 +13,15 @@ RoxygenNote: 7.1.1
 URL: http://jeroen.d.mulder.github.io/powRICLPM
 BugReports: https://github.com/JeroenDMulder/powRICLPM/issues
 Suggests: 
-    knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    knitr
 VignetteBuilder: knitr
 Imports: 
     lavaan (>= 0.6.7),
-    plyr (>= 1.8.5),
-    data.table (>= 1.12.8),
     furrr,
     future,
     ggplot2,
-    parallelly,
+    progressr,
     purrr,
     stats,
     utils

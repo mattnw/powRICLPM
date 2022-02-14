@@ -1,0 +1,74 @@
+---
+title: "Speeding up the analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Speeding up the analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Performing a Monte Carlo power analysis with a large number of replications, and across multiple simulation conditions, can take a lot of time. To speed up the process, it is possible to perform the power analysis *across simulation conditions* in parallel (i.e., on multiple cores). The `powRICLPM()` function has implemented `future`’s parallel processing capabilities using the `furrr` package. Below I will describe how you can easily set up parallel processing. 
+
+## `furrr`: Setup
+By default, the `powRICLPM` power analysis will run simulations across conditions *sequentially*. You, the user, have the power to change how the analysis runs by using the `plan()` function from the `furrr` package. See `?plan` for information on the different implemented evaluation strategies. I would advice to run the analysis in *multisession*, as this is a strategy that works regardless of the operating system you use. Use the `workers` argument in `plan()` to specify how many cores you want to use. 
+
+Next, you can simply run the `powRICLPM` analysis as you normally would, and the code will run on (in the below example) 7 cores. This can result in a significant reduction of computing time. However, note that it is unlikely that the computation time will be reduced by a factor 7, as the setup and finish of multisession code execution also takes some time.  
+
+```{r furrr-setup, eval = F}
+# Load the furrr package
+library(furrr)
+
+# Check how many cores are available
+future::availableCores()
+
+# Plan the powRICLPM analysis to run on 1 core less than the number of available cores
+plan(multisession, workers = 7) # For the case of 8 available cores
+
+# Run the powRICLPM analysis 
+output <- powRICLPM(sample_size = 500,
+                    time_points = c(3, 4, 5),
+                    ICC = c(0.3, 0.5, 0.7),
+                    RI_cor = RI_cor, 
+                    Phi = Phi,
+                    wSigma = wSigma,
+                    reps = 1000)
+
+# Revert back to sequential execution of code upon completion of the powRICLPM analysis
+plan(sequential)
+```
+
+We end by reverting back to sequential execution of code through `plan(sequential)`. 
+
+## `progressr`: Progress notifications
+It can be useful to get an approximation of the progress of the powRICLPM analysis while running the code, especially when running the analysis in parallel. `powRICLPM()` has implemented progress notifications using the `progressr` package. Simply put, there are two options through which you can get progress notification: 
+
+- You can subscribe to progress updates from a specific express by wrapping this expression with `with_progress({...})`. 
+- You can subscribe to progress updates from everywhere by running `handlers(global = T)`.
+
+The second option is not fully developed yet for the `furrr` package, so instead I focus on the first. Implementing the `with_progress({...})` option, as well as parallel executing the powRICLPM analysis, results in the below code:
+
+```{r progressr, eval = F}
+# Load progressr package
+library(progressr)
+
+# Plan the powRICLPM analysis to run on 7 cores
+plan(multisession, workers = 7) 
+
+# Run the powRICLPM analysis 
+with_progress({
+  output <- powRICLPM(sample_size = 500,
+                      time_points = c(3, 4, 5),
+                      ICC = c(0.3, 0.5, 0.7),
+                      RI_cor = RI_cor, 
+                      Phi = Phi,
+                      wSigma = wSigma,
+                      reps = 1000)
+})
+
+# Revert back to sequential execution of code upon completion of the powRICLPM analysis
+plan(sequential)
+
+```
+
+For more information about progress notification options using `progressr` for end-users, including auditory and email updates, see [https://progressr.futureverse.org](https://progressr.futureverse.org). 
+

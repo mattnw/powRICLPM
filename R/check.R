@@ -31,7 +31,6 @@ check_K <- function(x) {
   }
   return(x)
 }
-
 check_T <- function(x) {
   if(!all(x %% 1 == 0)) {
     stop("Elements in `time_points` should be integers.")
@@ -45,14 +44,25 @@ check_T <- function(x) {
   return(x)
 }
 
-check_N <- function(x) {
-  if(purrr::some(x, function(z) z %% 1 != 0)) {
+check_N <- function(n, t) {
+  if (purrr::some(n, function(z) z %% 1 != 0)) {
     stop("Elements in `sample_size` should be integers.")
   }
-  if(purrr::some(x, function(z) z < 0)) {
+  if (purrr::some(n, function(z) z < 0)) {
     stop("`sample_size` should be a positive integer.")
   }
-  return(x)
+
+  k <- 2 # Number of variables (might be variable in new releases)
+  t_min <- min(t) # Minimal number of repeated measures
+
+  # Compute number of parameters
+  n_parameters <- sum(factorial(1 + k) / (2*(k - 1)) * (t_min + 1),
+                      k ^ 2 * (t_min - 1))
+
+  if (purrr::some(n, function(z) z < n_parameters)) {
+    stop("The number of parameters to be estimated is larger than the sample size.")
+  }
+  return(n)
 }
 
 check_ICC <- function(x) {
@@ -90,7 +100,7 @@ check_wSigma <- function(x) {
 }
 
 check_Phi <- function(x) {
-  if(!is.matrix(x)) {
+  if (!is.matrix(x)) {
     stop("`Phi` should be of type `matrix`.")
   }
 
@@ -98,46 +108,34 @@ check_Phi <- function(x) {
   return(x)
 }
 
-check_cores <- function(x) {
-  # Check number of available logical cores
-  available_cores <- parallelly::availableCores(logical = TRUE)
-
-  # Check if argument matches CPU specifications
-  if (!is.null(x)) {
-    if (x > available_cores) {
-      stop("`cores` is greater than the number of logical cores in your CPU.")
-    }
-    if(x < 0) {
-      stop("`cores` should be a positive integer.")
-    }
-    if(!is.double(x)) {
-      stop("`cores` should be of type `numeric`.")
-    }
-    if(x %% 1 != 0) {
-      stop("`cores` should be an integer.")
-    }
-  }
-  if (is.null(x)) { # Default behavior
-    x <- available_cores - 1 # Leave one out by default for other processes
-    warning(paste("`n_cores` not specified. Based on your machine n_cores =", x, "is chosen."))
+check_skewness_kurtosis <- function(x) {
+  if (!is.numeric(x)) {
+    stop("`skewness` and `kurtosis` should be of type `numeric`, `integer`, or `double`.")
   }
   return(x)
 }
 
-check_seed <- function(x) {
-  if (!is.null(x)) {
-    if(is.numeric(x)) {
-      if(x %% 1 != 0) {
-        stop("`seed` should be an integer.")
-      }
-    } else {
-      stop("`seed` should be of type `numeric`.")
-    }
-
-  } else {
-    warning("Be careful, no seed was specified. The exact results might not be able to be replicated.")
+check_alpha <- function(x) {
+  if (!is.double(x)) {
+    stop("`alpha` should be of type `double`.")
   }
-  return(as.integer(x))
+  if (1 < x || x < 0) {
+    stop("`alpha` should be between 0 and 1.")
+  }
+  return(x)
+}
+
+check_seed <- function(seed) {
+  if (is.na(seed)) {
+    warning("No seed was specified: A seed was randomly created.")
+    return(floor(stats::runif(1, -1000000, 1000000)))
+  }
+  if (!is.numeric(seed)) {
+      stop("`seed` should be of type `numeric`.")
+    } else if (seed %% 1 != 0) {
+      stop("`seed` should be an integer.")
+    }
+  return(seed)
 }
 
 check_parameter <- function(x) {
@@ -151,19 +149,10 @@ check_parameter <- function(x) {
 
 check_parameter_summary <- function(parameter, object) {
   # Include checks additional to general check_parameter()
-  if (is.null(parameter)) {
-
-    stop("Please provide a `parameter` argument. You can use the `powRICLPM_names` function to get an overview of the parameter names in the 'powRICLPM' object.")
-
-  } else {
-    if (parameter %in% setdiff(powRICLPM_names(object), powRICLPM_names(object, max_set = TRUE))) {
-      stop("The specified parameter is not a valid parameter for all conditions.")
+  if (!parameter %in% names_powRICLPM(object)) {
+    stop("The specified parameter is not valid. Use `names_powRICLPM()` to get an overview of parameter names in the 'powRICLPM' object.")
     }
-    if (!parameter %in% powRICLPM_names(object)) {
-      stop("The specified parameter is not valid. Use `powRICLPM_names` to get an overview of parameter names in the 'powRICLPM' object.")
-    }
-    check_parameter(parameter)
-  }
+  check_parameter(parameter)
   return(parameter)
 }
 
@@ -178,13 +167,16 @@ check_reps <- function(x) {
 }
 
 check_search <- function(lower, upper, step) {
-  if(!purrr::every(list(lower, upper, step), is.double)) {
+  if (any(purrr::map_lgl(list(lower, upper, step), is.null))) {
+    stop("`search_lower`, `search_upper`, and/or `search_step` were not declared. Please provided values for all `search_` arguments.")
+  }
+  if (!purrr::every(list(lower, upper, step), is.double)) {
     stop("`search_lower`, `search_upper`, and `search_step` should be of type `numeric`.")
   }
-  if(upper < lower) {
+  if (upper < lower) {
     stop("`search_upper` should be higher than `search_lower`.")
   }
-  if(step > (upper - lower)) {
+  if (step > (upper - lower)) {
     stop("`search_step` should be smaller than or equal to the interval between `search_lower` and `search_upper`.")
   }
   return(invisible())
@@ -199,3 +191,11 @@ check_target <- function(x) {
   }
   return(x)
 }
+
+check_object <- function(x) {
+  if (!"powRICLPM" %in% class(x)) {
+    stop("`object` is not a 'powRICLPM' object.")
+  }
+}
+
+

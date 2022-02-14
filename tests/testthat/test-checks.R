@@ -23,9 +23,10 @@ test_that("check_PD() works", {
 
 # Test check_N() ----
 test_that("check_N() works", {
-  expect_equal(check_N(c(200, 300)), c(200, 300))
-  expect_error(check_N(c(200.4, 300)), "Elements in `sample_size` should be integers.")
-  expect_error(check_N(c(-200, 300)), "sample_size` should be a positive integer.")
+  expect_equal(check_N(c(200, 300), 3), c(200, 300))
+  expect_error(check_N(c(200.4, 300), 3), "Elements in `sample_size` should be integers.")
+  expect_error(check_N(c(-200, 300), 3), "sample_size` should be a positive integer.")
+  expect_error(check_N(10, 3), "The number of parameters to be estimated is larger than the sample size.")
 })
 
 # Test check_RI() ----
@@ -59,19 +60,23 @@ test_that("check_Phi() works", {
   expect_error(check_Phi(m2), "Eigenvalues are not within unit circle.")
 })
 
-# Test check_cores() ----
-test_that("check_cores() works", {
-  expect_equal(check_cores(2), 2)
-  expect_error(check_cores(-2), "`cores` should be a positive integer.")
-  expect_error(check_cores(200), "`cores` is greater than the number of logical cores in your CPU.")
-  expect_error(check_cores("2"), "cores` should be of type `numeric`.")
-  expect_warning(check_cores(NULL))
+# Test check_skewness_kurtosis() ----
+test_that("check_skewness_kurtosis() works", {
+  expect_equal(check_skewness_kurtosis(c(0, 0.1, 0.6, 0.45)), c(0, 0.1, 0.6, 0.45))
+  expect_error(check_skewness_kurtosis(c("0", 0.4)), "`skewness` and `kurtosis` should be of type `numeric`, `integer`, or `double`.")
+})
+
+# Test check_alpha() ----
+test_that("check_alpha() works", {
+  expect_equal(check_alpha(0.05), 0.05)
+  expect_error(check_alpha("0.05"), "`alpha` should be of type `double`.")
+  expect_error(check_alpha(-0.05), "`alpha` should be between 0 and 1.")
 })
 
 # Test check_seed() ----
 test_that("check_seed() works", {
   expect_equal(check_seed(1234), 1234)
-  expect_warning(check_seed(NULL), "Be careful, no seed was specified. The exact results might not be able to be replicated.")
+  expect_warning(check_seed(NA), "No seed was specified: A seed was randomly created.")
   expect_error(check_seed("1234"), "`seed` should be of type `numeric`.")
   expect_error(check_seed(1234.5), "`seed` should be an integer.")
 })
@@ -92,6 +97,7 @@ test_that("check_reps() works", {
 
 # Test check_search() ----
 test_that("check_search() works", {
+  expect_error(check_search(100, 600, NULL), "`search_lower`, `search_upper`, and/or `search_step` were not declared. Please provided values for all `search_` arguments.")
   expect_invisible(check_search(100, 2000, 50))
   expect_error(check_search(2000, 100, 50), "`search_upper` should be higher than `search_lower`.")
   expect_error(check_search(100, 2000, 5000), "`search_step` should be smaller than or equal to the interval between `search_lower` and `search_upper`.")
@@ -104,4 +110,28 @@ test_that("check_target() works", {
   expect_error(check_target("0.80"), "`target` should be of type `numeric`.")
   expect_error(check_target(1.4), "`target` should be between 0 and 1.")
 })
+
+# Test check_parameter_summary() ----
+test_that("check_parameter_summary() works", {
+
+  # Create valid powRICLPM() input
+  Phi <- matrix(c(0.4, 0.15, 0.2, 0.3), ncol = 2, byrow = TRUE)
+  wSigma <- matrix(c(1, 0.3, 0.3, 1), ncol = 2, byrow = TRUE)
+
+  # Create powRICLPM object for à priori power analysis
+  output <- powRICLPM(target_power = 0.5,
+                      search_lower = 500,
+                      search_upper = 600,
+                      search_step = 50,
+                      time_points = 3,
+                      ICC = 0.5,
+                      RI_cor = 0.3,
+                      Phi = Phi,
+                      wSigma = wSigma,
+                      reps = 5,
+                      seed = 123456)
+
+  # Run test
+  expect_snapshot_error(summary(output, parameter = "wB2~wB3"))
+  })
 

@@ -2,40 +2,39 @@
 % Please edit documentation in R/powRICLPM.R
 \name{powRICLPM}
 \alias{powRICLPM}
-\title{Perform Power Analysis for the RI-CLPM}
+\title{Power Analysis for the RI-CLPM}
 \usage{
 powRICLPM(
-  target_power = NULL,
-  parameter = NULL,
+  target_power,
   search_lower = NULL,
   search_upper = NULL,
-  search_step = NULL,
+  search_step = 20,
   sample_size = NULL,
   time_points,
   ICC,
   RI_cor,
   Phi,
   wSigma,
+  skewness = 0,
+  kurtosis = 0,
+  alpha = 0.05,
   reps,
-  cores = NULL,
-  seed = NULL,
+  seed = NA,
   save_path = NA
 )
 }
 \arguments{
-\item{target_power}{A numeric value between 0 and 1, denoting the desired power level for which to recommend a sample size. Use only for à priori analyses.}
+\item{target_power}{A numeric value between 0 and 1, denoting the targeted power level.}
 
-\item{parameter}{A character string denoting the parameter for which to compute a recommended sample size. Use only for à priori analysis. See "Details" for naming defaults for parameters used in this package.}
+\item{search_lower}{A positive integer, denoting the lower bound of the range of sample sizes to include in the power analysis.}
 
-\item{search_lower}{A positive integer, denoting the lower bound of the range of sample sizes for which to simulate the power. Use only for à priori analysis.}
+\item{search_upper}{A positive integer, denoting the upper bound of the range of sample sizes to include in the power analysis.}
 
-\item{search_upper}{A positive integer, denoting the upper bound of the range of sample sizes for which to simulate the power. Use only for à priori analysis.}
+\item{search_step}{A positive integer, denoting the increment in sample sizes.}
 
-\item{search_step}{A positive integer, denoting the increment in sample sizes. Use only for à priori analysis.}
+\item{sample_size}{An integer (vector) with elements at least larger than 20 (i.e., the number of free parameters in a basic bivariate RI-CLPM with 3 repeated measures), indicating the sample sizes at which to evaluate power. This argument can be specified as an alternative to the `search_` arguments to denote specific sample sizes, rather than an entire range.}
 
-\item{sample_size}{An integer or integer vector with elements larger than 1, indicating the sample sizes at which to evaluate power. Use only for post hoc analysis.}
-
-\item{time_points}{An integer or integer vector with elements larger than 3, indicating number of time points.}
+\item{time_points}{An integer (vector) with elements larger than 3, indicating number of time points.}
 
 \item{ICC}{A numeric value denoting the proportion of variance at the between-unit level.}
 
@@ -45,16 +44,20 @@ powRICLPM(
 
 \item{wSigma}{A correlation matrix for the within-unit components.}
 
-\item{reps}{A positive integer denoting the number of Monte Carlo replications to be used during simulations.}
+\item{skewness}{A numeric (vector) denoting the skewness values for the observed variables. For more information, see \code{\link[lavaan]{simulateData}}.}
 
-\item{cores}{A positive integer denoting the number of cores to use during the Monte Carlo simulations. Executing the analysis using multiple cores can significantly reduce computation time.}
+\item{kurtosis}{A numeric (vector) denoting the kurtosis values for the observed variables. For more information, see \code{\link[lavaan]{simulateData}}.}
+
+\item{alpha}{A numeric value denoting the significance criterion. It defaults to 0.05.}
+
+\item{reps}{A positive integer denoting the number of Monte Carlo replications to be used during simulations.}
 
 \item{seed}{An integer of length 1. If multiple cores are used, a seed of length 1 will be used to generate a full L'Ecuyer-CMRG seed for all cores. For more information, see \code{\link[furrr]{furrr_options}}.}
 
 \item{save_path}{A character string naming the directory to save any (data) files to.}
 }
 \value{
-A list containing a "conditions" and "session" element. The "condition" element is again a list, where each element is itself a list containing elements needed to run a power analysis for a specific condition. This includes:
+A list containing a "conditions" and "session" element. The "condition" element is again a list, where each element is itself a list containing the input (independent variables in a power analysis context) and output (dependent variables) of the power analysis for a specific condition. This includes:
 
 \itemize{
   \item \code{sample_size}: The sample size.
@@ -67,52 +70,39 @@ A list containing a "conditions" and "session" element. The "condition" element 
   \item \code{est_tab}: \pkg{lavaan} parameter table for estimation.
   \item \code{save_path}: The directory (data) files were saved to.
   \item \code{results}: Data frame containing the power analysis results.
-  \item \code{fails}: Logical vector indicating failed MCMC reps.
+  \item \code{errors}: A logical vector denoting failed Monte Carlo replications,
+  \item \code{not_converged}: A logical vector denoting non-converged Monte Carlo replications, and
+  \item \code{inadmissible} A logical vector denoting Monte Carlo replications that resulted in negative variances or non-positive definite matrices.
 }
 
-The "session" element is a list containing information common to all conditions. For à priori analyses, this includes:
+The "session" element is a list containing information common to all conditions, including
 \itemize{
-  \item \code{type}: The type of power analysis performed.
-  \item \code{target_power}: The desired power level.
-  \item \code{parameter}: The parameter of interest.
-  \item \code{search_lower}: The lower bound of the set of candidate sample sizes.
-  \item \code{search_upper}: The upper bound of the set of candidate sample sizes.
-  \item \code{search_step}: The increment in sample sizes.
-  \item \code{reps}: The number of Monte Carlo replication.
-}
-
-For post hoc analyses, this includes:
-\itemize{
-  \item \code{type}: The type of power analysis performed.
   \item \code{sample_size}: The sample sizes of interest.
   \item \code{time_points}: The number of time points of interest.
   \item \code{ICC}: The proportion of between-unit variance.
   \item \code{reps}: The number of Monte Carlo replication.
+  \item \code{target_power}: The desired power level.
 }
 }
 \description{
-\code{powRICLPM()} is used to perform a Monte Carlo power analysis for the random intercept cross-lagged panel model (RICLPM). It has three main functionalities: 1) Recommend a sample size for a desired power level for a specific parameter (i.e., à priori analysis), 2) simulate the power for conditions with varying sample sizes and number of time points (i.e., post hoc analysis), and 3) create Mplus model syntax for performing power analysis in Mplus.
+\code{powRICLPM()} is used to perform a Monte Carlo power analysis for the random intercept cross-lagged panel model (RI-CLPM). It can *recommend a sample size* given a desired power level and specific parameter, and compute *performance measures* (e.g., bias, mean square error, etc.) for parameters across experimental conditions. Conditions can change in terms of sample size, number of time points, proportion of between-unit variance, skewness, and kurtosis.
 }
 \details{
-\subsection{Data generation}
-Data are generated from an RICLPM with a variance of 1 for the within-unit components, such that the lagged effects (specified in the \code{Phi} argument) can be interpreted as standardized effects. This implies that the process at the within-unit level must be stationary and that the \code{Phi} matrix is subject to the stationarity constraints of a VAR(1) model (i.e., eigenvalues smaller than 1). Based on the specified \code{Phi} and \code{wSigma} matrix, the residual variances and covariance between the within-unit components are computed (see \code{\link{compute_Psi}}) for wave 2 and later.
+\subsection{Data generation}{Data are generated using \code{\link[lavaan]{simulateData}} from the \pkg{lavaan} package. The data generating model is an RI-CLPM with a variance of 1 for the within-unit components, such that the lagged effects (specified in the \code{Phi} argument) can be interpreted as standardized effects. This implies that the process at the within-unit level must be stationary and that the \code{Phi} matrix is subject to the stationarity constraints of a VAR(1) model (i.e., eigenvalues smaller than 1). Based on the specified \code{Phi} and \code{wSigma} matrix, the residual variances and covariance between the within-unit components are computed (see \code{\link{compute_Psi}}) for wave 2 and later.}
 
-\subsection{Naming conventions}
-The variables in the RICLPM are given default names, namely capital letters in alphabetical order, with numbers denoting the measurement occasion. For example, for a bivariate RICLPM with 3 time points, we have \code{A1}, \code{A2}, \code{A3}, \code{B1}, \code{B2}, and \code{B3} as observed variables. Their within-components denoted by \code{wA1}, \code{wA2}, ..., \code{wB3}, respectively. The between components have \code{RI_} prepended to the variable name, resulting in \code{RI_A} and \code{RI_B}.
+\subsection{Naming conventions for observed and latent variables}{The observed variables in the RI-CLPM are given default names, namely capital letters in alphabetical order, with numbers denoting the measurement occasion. For example, for a bivariate RICLPM with 3 time points, we observe \code{A1}, \code{A2}, \code{A3}, \code{B1}, \code{B2}, and \code{B3}. Their within-components are denoted by \code{wA1}, \code{wA2}, ..., \code{wB3}, respectively. The between-components have \code{RI_} prepended to the variable name, resulting in \code{RI_A} and \code{RI_B}.
 
-Parameters are denoted using \emph{lavaan} model syntax. For more information, see \code{\url{https://lavaan.ugent.be/tutorial/syntax1.html}}. For example, the random intercepts are denoted as \code{RI_A~~RI_B}, the cross-lagged effects at the first wave as \code{wB2~wA1} and \code{wA2~wB1}, and the autoregressive effects as \code{wA2~wA1} and \code{wB2~wB1}.
+Parameters are denoted using \pkg{lavaan} model syntax. For more information, see \url{https://lavaan.ugent.be/tutorial/syntax1.html}. For example, the random intercept variances are denoted by \code{RI_A~~RI_A} and \code{RI_B~~RI_B}, the cross-lagged effects at the first wave as \code{wB2~wA1} and \code{wA2~wB1}, and the autoregressive effects as \code{wA2~wA1} and \code{wB2~wB1}. Use \code{\link{names_powRICLPM}} to extract parameter names from the `powRICLPM` object.}
 
-\subsection{Data analysis}
-Data is generated and analyzed using \pkg{lavaan}. To speed up the process, power analysis for different conditions can be run in parallel (implemented using \pkg{furrr}).
+\subsection{Data analysis}{Data is analyzed using \pkg{lavaan}. To speed up the process, power analysis across different conditions can be run in parallel (implemented using \pkg{furrr}). For more information, see \url{https://jeroendmulder.github.io/powRICLPM/parallel.html}.}
 }
 \examples{
 # Define population parameters for lagged effects and within-component correlations
 Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
 wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
 
-# Option 1 - À priori power analysis
-output1 <- powRICLPM(target_power = 0.5,
-                     parameter = "wB2~wA1",
+# Option 1 - Get a sample size recommendation
+output1 <- powRICLPM(target_power = 0.8,
                      search_lower = 500,
                      search_upper = 600,
                      search_step = 50,
@@ -122,22 +112,26 @@ output1 <- powRICLPM(target_power = 0.5,
                      Phi = Phi,
                      wSigma = wSigma,
                      reps = 30,
-                     cores = 1,
                      seed = 123456)
 
-# Option 2 - Post hoc power analysis
-output2 <- powRICLPM(sample_size = c(250, 350, 400),
-                     time_points = c(3, 4),
-                     ICC = 0.5,
+# Option 2 - Get performance measures across 6 simulation conditions
+\dontrun{
+output2 <- powRICLPM(sample_size = 400,
+                     time_points = c(3, 4, 5),
+                     ICC = c(0.3, 0.7),
                      RI_cor = 0.3,
                      Phi = Phi,
                      wSigma = wSigma,
                      reps = 100,
-                     cores = 1,
                      seed = 123456)
+                     }
 }
 \seealso{
-\code{\link{powRICLPM_Mplus}} to create syntax for RI-CLPM power analysis in Mplus, \code{\link{powRICLPM_plot}} to visualize results of a powRICLPM analysis, and \code{\link{powRICLPM_summary}} to summarize results of powRICLPM analysis.
+\itemize{
+  \item \code{\link{powRICLPM_Mplus}}: Create Mplus model syntax for RI-CLPM power analysis,
+  \item \code{\link{plot_powRICLPM}}: Visualize results of a powRICLPM analysis, and
+  \item \code{\link{coef_powRICLPM}}: Extract performance measures for a specific parameter, across all experimental conditions.
+}
 }
 \author{
 Jeroen D. Mulder \email{j.d.mulder@uu.nl}

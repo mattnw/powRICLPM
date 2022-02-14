@@ -1,122 +1,121 @@
-#' @title
-#' powRICLPM Power Analysis Summary
-#'
-#' @description
-#' \code{powRICLPM_summary()} is a method for class powRICLPM, summarizing the results of an à priori or post hoc powRICLPM simulation study.
-#'
-#' @param object A powRICLPM object.
-#' @param ... Phantom argument that has no influence on the summary produced.
-#' @param parameter A character string denoting a single variable of interest. Use \code{\link{powRICLPM_names}} to get an overview of valid parameter names for the powRICLPM object.
-#'
-#' @seealso
-#' \code{\link{powRICLPM_names}} to get an overview of valid parameter names included in the powRICLPM object.
-#'
-#' @examples
-#' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
-#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
-#'
-#' # Create powRICLPM object for à priori power analysis
-#' output <- powRICLPM(target_power = 0.5,
-#'                      parameter = "wB2~wA1",
-#'                      search_lower = 300,
-#'                      search_upper = 600,
-#'                      search_step = 50,
-#'                      time_points = 3,
-#'                      ICC = 0.5,
-#'                      RI_cor = 0.3,
-#'                      Phi = Phi,
-#'                      wSigma = wSigma,
-#'                      reps = 50,
-#'                      cores = 1,
-#'                      seed = 123456)
-#'
-#' # Summarize results
-#' powRICLPM_summary(output, parameter = "wB2~wA1")
+#' @method summary powRICLPM
 #' @export
-powRICLPM_summary <- function(object, ..., parameter = NULL) {
+summary.powRICLPM <- function(object, parameter = NULL, ...) {
 
-  if (object$session$type == "apriori") {
+  # Argument validation
+  check_object(object)
+  if (!is.null(parameter)) {parameter <- check_parameter_summary(parameter, object)}
 
-    # Check arguments
-    parameter = check_parameter_summary(parameter, object)
+  # Get target power
+  target_power <- object$session$target_power
 
-    # Get analysis characteristics
-    target_power <- object$session$target_power
+  # Print basic summary()-output
+  cat("\n", "powRICLPM analysis completed:", sep = "")
+  cat("\n", "- Monte Carlo replications: ", object$session$reps)
+  cat("\n", "- Sample size(s):", object$session$sample_size)
+  cat("\n", "- Number of time points:", object$session$time_points)
+  cat("\n", "- Proportion(s) random intercept variance:", object$session$ICC)
+  cat("\n", " - Target power: ", target_power, sep = "")
 
-    # Find index recommended sample size
-    candidate <- purrr::detect_index(object$conditions, function(x) {
-      x$results[x$results$par == parameter, "sig"] >= target_power
-    })
+  if (!is.null(parameter) && !is.null(target_power)) {
 
-    # Display results
-    cat("\n", "A priori powRICLPM-analysis completed:", sep = "")
-    cat("\n", "- Monte Carlo replications: ", object$session$reps)
-    cat("\n", "- Target power: ", target_power)
+    # Compute no conditions that reach targeted power
+    n_recommendations <- length(
+      purrr::keep(object$conditions, function(condition) {
+        condition$results[condition$results$par == parameter, "pwr"] >= target_power
+      })
+    )
 
-    if(candidate == 0) { # No recommended sample size found
-      cat("\n", "- Preliminary recommended sample size: NOT FOUND")
+    # Print n_recommendations
+    cat("\n\n", "Number of conditions that reach target power: ", n_recommendations, sep = "")
 
-      cat("\n\n", "Sugested next steps:", sep = "")
-      cat("\n", "- Increase search_upper and rerun the analysis.")
-      cat("\n", "- Use powRICLPM_plot() to visualize preliminary results for entire range of sample sizes.")
+    if (n_recommendations == 0) {
+    cat("\n\n", "Suggested next steps:", sep = "")
+    cat("\n", "- Increase search_upper and rerun the analysis.")
 
-    } else { # Recommended sample size found
+    } else if (n_recommendations == 1) {
 
-      cat("\n", "- Preliminary recommended sample size: ", object$conditions[[candidate]]$sample_size)
-      cat("\n", "- Number of non-converged replications for recommended run: ", sum(object$conditions[[candidate]]$not_converged))
-      cat("\n", "- Number of replications with inadmissible estimates for recommended run: ", sum(object$conditions[[candidate]]$inadmissible))
+      # Detect condition that meets target_power
+      candidate <- purrr::detect_index(object$conditions, function(condition) {
+        condition$results[condition$results$par == parameter, "pwr"] >= target_power
+      })
 
-      cat("\n\n", "Sugested next steps:", sep = "")
-      cat("\n", "- Use powRICLPM_plot() to visualize preliminary results for entire range of sample sizes.")
-      cat("\n", "- Rerun powRICLPM with the recommended sample size and large number of replications to validate preliminary results.")
+      # Print recommended experimental condition
+      cat("\n", "- Sample size:", object$conditions[[candidate]]$sample_size)
+      cat("\n", "- Number of time points:", object$conditions[[candidate]]$time_points)
+      cat("\n", "- Proportion of between-unit variance:", object$conditions[[candidate]]$ICC)
+      cat("\n", "- Number of non-converged replications:", sum(object$conditions[[candidate]]$not_converged))
+      cat("\n", " - Number of replications with inadmissible estimates:", sum(object$conditions[[candidate]]$inadmissible), sep = "")
+
+      cat("\n\n", "Sugested next step:", sep = "")
+      cat("\n", "- If this is a preliminary powRICLPM analysis, validate this result by rerunning the analysis with an increased number of replications (e.g., `reps = 1000`).")
+
+    } else if (n_recommendations > 1) {
+
+      # Print suggested next steps
+      cat("\n\n", "Suggested next steps:", sep = "")
+      cat("\n", "- If this is a preliminary powRICLPM analysis, validate these recommendations (or a selection) by rerunning the analysis with an increased number of replications (e.g., `reps = 1000`).")
     }
 
-  } else if (object$session$type == "posthoc") {
+    # Print suggestion that applies to every scenario
+    cat("\n", "- Use `plot_powRICLPM()` to visualize results across all experimental conditions.")
+  } else {
 
-    if (is.null(parameter)) {
-
-      # Display general results
-      cat("\n", "Post hoc powRICLPM-analysis completed:", sep = "")
-      cat("\n", "- Monte Carlo replications: ", object$session$reps)
-      cat("\n", "- Proportion random intercept variance:", object$session$ICC)
-      cat("\n", "- Sample sizes (min. - max.):", min(object$session$sample_size), "-", max(object$session$sample_size))
-      cat("\n", "- Time points (min. - max.):", min(object$session$time_points), "-", max(object$session$time_points))
-
-      cat("\n\n", "Suggestions:", sep = "")
-      cat("\n", "- Specify the `parameter` argument in the powRICLPM_summary() function to obtain detailed results for a specific parameter.")
-      cat("\n", "- Use powRICLPM_plot() to visualize the power across all conditions.")
-    } else {
-
-      # Print summary title
-      cat("\n", "Post hoc powRICLPM-analysis results for parameter " , parameter, ":\n\n", sep = "")
-
-      # Print MCMC power analysis results for specified parameter
-      print(
-        purrr::map_dfr(object$conditions, function(condition) {
-          data.frame(sample_size = condition$sample_size,
-                     time_points = condition$time_points,
-                     ICC = condition$ICC,
-                     condition$results[condition$results$par == parameter, -1]
-          )
-        })
-      )
-    }
+    # Print suggestions when no `parameter` was specified
+    cat("\n\n", "Sugested next steps:", sep = "")
+    cat("\n", " - Specify the `parameter` argument of `summary()` to obtain a parameter-specific summary.", sep = "")
+    cat("\n", " - Use `names_powRICLPM()` to obtain parameter names in the powRICLPM object.", sep = "")
+    cat("\n", " - Use `plot_powRICLPM()` to visualize results for a specific parameter across conditions.")
   }
 }
 
 #' @title
-#' Get Parameter Names From "powriclpm-Object
+#' Performance Measures From `powRICLPM` Object
 #'
 #' @description
-#' \code{\link{powRICLPM_names}} gets the names of the variables that are internally created by the powRICLPM package. Details about the naming conventions can be found in the "Details" section of \code{\link{powRICLPM}}.
+#' \code{coef_powRICLPM} extracts performance measures (e.g., bias, mean square error, power) for a specific parameter, across all experimental conditions, from a `powRICLPM` object.
 #'
-#' @param x A powRICLPM object.
-#' @param max_set A logical indicating if the parameter names from the condition with the largest number of parameters should be returned. When simulating the power for conditions with varying number of time points, then there are different numbers of parameters over the conditions. By default, this function returns the parameter names from the condition with the smallest number of parameters, such that the returned parameter names are valid for each condition.
+#' @param object A `powRICLPM` object.
+#' @param parameter A character string denoting a single variable of interest. Use \code{\link{names_powRICLPM}} to get an overview of parameter names in the `powRICLPM` object.
 #'
-#' @return A character vector with the names of the variables internally created by the powRICLPM package.
+#' @return
+#' A `data.frame` object with columns containing performance measures, and rows representing experimental conditions.
+#' @export
+coef_powRICLPM <- function(object, parameter) {
+
+  # Argument validation
+  check_object(object)
+  parameter <- check_parameter_summary(parameter, object)
+
+  # Combine sample sizes and simulated power across conditions
+  d <- purrr::map_dfr(object$conditions, function(condition) {
+
+    # Create data frame
+    data.frame(sample_size = condition$sample_size,
+               time_points = condition$time_points,
+               ICC = condition$ICC,
+               errors = sum(condition$errors),
+               not_converged = sum(condition$not_converged),
+               inadmissible = sum(condition$inadmissible),
+               condition$results[condition$results$par == parameter, -1]
+    )
+  })
+  return(d)
+}
+
+
+#' @title
+#' Parameter Names From `powRICLPM` Object
 #'
-#' @seealso \code{\link{powRICLPM_summary}}
+#' @description
+#' \code{names_powRICLPM} extracts the names of the variables that are internally created by the powRICLPM package. Details about the naming conventions can be found in the "Details" section of \code{\link{powRICLPM}}.
+#'
+#' @param object A `powRICLPM` object.
+#'
+#' @details
+#' When simulating the power for conditions with a varying number of time points, there are different amounts of parameters across the conditions. By default, this function returns the parameter names from the condition with the smallest number of parameters, such that the returned parameter names are valid for each condition.
+#'
+#' @return A character vector with the names of the variables internally created by the \pkg{powRICLPM} package.
 #'
 #' @examples
 #' # Define population parameters for lagged effects and within-component correlations
@@ -125,37 +124,40 @@ powRICLPM_summary <- function(object, ..., parameter = NULL) {
 #'
 #' # Create powRICLPM object for à priori power analysis
 #' output <- powRICLPM(target_power = 0.5,
-#'                      parameter = "wB2~wA1",
-#'                      search_lower = 300,
-#'                      search_upper = 600,
-#'                      search_step = 50,
-#'                      time_points = 3,
-#'                      ICC = 0.5,
-#'                      RI_cor = 0.3,
-#'                      Phi = Phi,
-#'                      wSigma = wSigma,
-#'                      reps = 50,
-#'                      cores = 1,
-#'                      seed = 123456)
+#'                     search_lower = 300,
+#'                     search_upper = 600,
+#'                     search_step = 50,
+#'                     time_points = 3,
+#'                     ICC = 0.5,
+#'                     RI_cor = 0.3,
+#'                     Phi = Phi,
+#'                     wSigma = wSigma,
+#'                     reps = 50,
+#'                     seed = 123456)
 #'
 #' # Get names of internally created parameters
-#' powRICLPM_names(output)
+#' names_powRICLPM(output)
 #' @export
-powRICLPM_names <- function(x, max_set = FALSE) {
+names_powRICLPM <- function(object) {
 
   # Determine number of parameters per condition
-  condition_length <- purrr::map_int(x$conditions, function(x) {
-    length(x$results$par)
+  condition_length <- purrr::map_int(object$conditions, function(condition) {
+    length(condition$results$par)
   })
 
-  if (max_set) {
+  # Return names of parameters in condition with least parameters
+  return(object$conditions[[which.min(condition_length)]]$results$par)
+}
 
-    # Return names of parameters in condition with most parameters
-    return(x$conditions[[which.max(condition_length)]]$results$par)
 
-  } else {
-
-    # Return names of parameters in condition with least parameters
-    return(x$conditions[[which.min(condition_length)]]$results$par)
-  }
+#' @method print powRICLPM
+#' @export
+print.powRICLPM <- function(x, ...) {
+  cat("\n", "A powRICLPM object resulting from a call to powRICLPM():" , sep = "")
+  cat("\n", "- Monte Carlo replications: ", x$session$reps)
+  cat("\n", "- Sample size(s):", x$session$sample_size)
+  cat("\n", "- Number of time points:", x$session$time_points)
+  cat("\n", "- Proportion(s) random intercept variance:", x$session$ICC)
+  cat("\n", "- Target power: ", x$sessions$target_power)
+  invisible(x)
 }

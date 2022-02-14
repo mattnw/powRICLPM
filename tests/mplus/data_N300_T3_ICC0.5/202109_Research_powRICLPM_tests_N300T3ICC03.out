@@ -1,0 +1,743 @@
+Mplus VERSION 8.7 (Mac)
+MUTHEN & MUTHEN
+01/30/2022   6:11 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:
+      Test of Monte Carlo power analysis using powRICLPM
+      Sample size - 300
+      Number of waves - 3
+      ICC - 0.3
+
+  DATA:
+  	FILE = dfList.dat;
+  	TYPE = MONTECARLO;
+  	
+  VARIABLE:
+      NAMES = x1-x3 y1-y3;
+
+  ANALYSIS:
+      MODEL = NOCOV; ! Sets all default covariances to zero
+
+  MODEL:
+      ! Create between-components (random intercepts)
+      RI_x BY x1@1 x2@1 x3@1;
+      RI_y BY y1@1 y2@1 y3@1;
+
+      ! Estimate variances of random intercepts
+      RI_x*1 RI_y*1;
+
+      ! Estimate the covariance between the random intercepts
+      RI_x WITH RI_y*0.3;
+
+      ! Create within-person centered variables
+      wx1 BY x1@1;
+      wx2 BY x2@1;
+      wx3 BY x3@1;
+
+      wy1 BY y1@1;
+      wy2 BY y2@1;
+      wy3 BY y3@1;
+
+      ! Constrain the measurement error variances to zero
+      x1-y3@0;
+
+      ! Estimate the lagged effects between the within-person centered variables
+      wx2 ON wx1*0.4 wy1*0.15;
+      wy2 ON wx1*0.2 wy1*0.3;
+
+      wx3 ON wx2*0.4 wy2*0.15;
+      wy3 ON wx2*0.2 wy2*0.3;
+
+      ! Estimate the (residual) variances.
+      wx1*1 wy1*1;
+      wx2*0.7815 wy2*0.834;
+      wx3*0.7815 wy3*0.834;
+
+      ! Estimate the covariance between the within-person
+      ! components at the first wave
+      wx1 WITH wy1*0.3;
+
+      ! Estimate the covariances between the residuals of
+      ! the within-person components (the innovations)
+      wx2 WITH wy2*0.13;
+      wx3 WITH wy3*0.13;
+
+  OUTPUT:
+      TECH1 SAMPSTAT;
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+
+Test of Monte Carlo power analysis using powRICLPM
+Sample size - 300
+Number of waves - 3
+ICC - 0.3
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Average number of observations                                 300
+
+Number of replications
+    Requested                                                  100
+    Completed                                                  100
+
+Number of dependent variables                                    6
+Number of independent variables                                  0
+Number of continuous latent variables                            8
+
+Observed dependent variables
+
+  Continuous
+   X1          X2          X3          Y1          Y2          Y3
+
+Continuous latent variables
+   RI_X        RI_Y        WX1         WX2         WX3         WY1
+   WY2         WY3
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                  1000
+Convergence criterion                                    0.500D-04
+Maximum number of steepest descent iterations                   20
+
+Input data file(s)
+  Multiple data files from
+    dfList.dat
+
+Input data format  FREE
+
+
+SAMPLE STATISTICS
+
+NOTE:  These are average results over 100 data sets.
+
+
+     SAMPLE STATISTICS
+
+
+           Means
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+               -0.023        -0.027        -0.017         0.000        -0.014
+
+
+           Means
+              Y3
+              ________
+               -0.004
+
+
+           Covariances
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+ X1             1.995
+ X2             1.431         1.970
+ X3             1.221         1.421         1.988
+ Y1             0.605         0.566         0.455         1.994
+ Y2             0.595         0.588         0.572         1.358         2.010
+ Y3             0.466         0.557         0.583         1.138         1.342
+
+
+           Covariances
+              Y3
+              ________
+ Y3             1.954
+
+
+           Correlations
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+ X1             1.000
+ X2             0.722         1.000
+ X3             0.613         0.718         1.000
+ Y1             0.303         0.286         0.229         1.000
+ Y2             0.297         0.295         0.286         0.678         1.000
+ Y3             0.236         0.284         0.296         0.577         0.677
+
+
+           Correlations
+              Y3
+              ________
+ Y3             1.000
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       26
+
+Loglikelihood
+
+    H0 Value
+
+        Mean                             -2718.726
+        Std Dev                             33.239
+        Number of successful computations      100
+
+             Proportions                   Percentiles
+        Expected    Observed         Expected       Observed
+           0.990       1.000        -2796.051      -2793.037
+           0.980       0.980        -2786.990      -2787.445
+           0.950       0.960        -2773.401      -2772.709
+           0.900       0.890        -2761.325      -2765.670
+           0.800       0.780        -2746.700      -2750.451
+           0.700       0.630        -2736.157      -2738.851
+           0.500       0.500        -2718.726      -2718.846
+           0.300       0.360        -2701.295      -2696.941
+           0.200       0.200        -2690.752      -2691.401
+           0.100       0.110        -2676.126      -2675.861
+           0.050       0.020        -2664.050      -2667.180
+           0.020       0.020        -2650.462      -2664.287
+           0.010       0.010        -2641.401      -2649.555
+
+    H1 Value
+
+        Mean                             -2718.287
+        Std Dev                             33.338
+        Number of successful computations      100
+
+             Proportions                   Percentiles
+        Expected    Observed         Expected       Observed
+           0.990       1.000        -2795.842      -2792.815
+           0.980       0.980        -2786.754      -2787.415
+           0.950       0.960        -2773.125      -2772.387
+           0.900       0.890        -2761.013      -2765.665
+           0.800       0.790        -2746.344      -2749.577
+           0.700       0.640        -2735.770      -2738.745
+           0.500       0.490        -2718.287      -2718.845
+           0.300       0.370        -2700.805      -2696.419
+           0.200       0.200        -2690.230      -2690.918
+           0.100       0.100        -2675.561      -2675.820
+           0.050       0.020        -2663.449      -2666.514
+           0.020       0.020        -2649.820      -2664.134
+           0.010       0.010        -2640.733      -2649.343
+
+Information Criteria
+
+    Akaike (AIC)
+
+        Mean                              5489.452
+        Std Dev                             66.479
+        Number of successful computations      100
+
+             Proportions                   Percentiles
+        Expected    Observed         Expected       Observed
+           0.990       0.990         5334.802       5308.022
+           0.980       0.980         5352.924       5351.111
+           0.950       0.980         5380.101       5382.585
+           0.900       0.890         5404.252       5399.049
+           0.800       0.800         5433.503       5431.493
+           0.700       0.640         5454.590       5445.789
+           0.500       0.500         5489.452       5489.066
+           0.300       0.370         5524.313       5529.577
+           0.200       0.220         5545.400       5546.808
+           0.100       0.110         5574.651       5576.677
+           0.050       0.040         5598.803       5594.050
+           0.020       0.020         5625.979       5621.996
+           0.010       0.000         5644.101       5626.890
+
+    Bayesian (BIC)
+
+        Mean                              5585.750
+        Std Dev                             66.479
+        Number of successful computations      100
+
+             Proportions                   Percentiles
+        Expected    Observed         Expected       Observed
+           0.990       0.990         5431.100       5404.321
+           0.980       0.980         5449.223       5447.409
+           0.950       0.980         5476.399       5478.884
+           0.900       0.890         5500.551       5495.347
+           0.800       0.800         5529.801       5527.792
+           0.700       0.640         5550.889       5542.087
+           0.500       0.500         5585.750       5585.364
+           0.300       0.370         5620.612       5625.875
+           0.200       0.220         5641.699       5643.106
+           0.100       0.110         5670.949       5672.975
+           0.050       0.040         5695.101       5690.349
+           0.020       0.020         5722.278       5718.294
+           0.010       0.000         5740.400       5723.188
+
+    Sample-Size Adjusted BIC (n* = (n + 2) / 24)
+
+        Mean                              5503.293
+        Std Dev                             66.479
+        Number of successful computations      100
+
+             Proportions                   Percentiles
+        Expected    Observed         Expected       Observed
+           0.990       0.990         5348.644       5321.864
+           0.980       0.980         5366.766       5364.953
+           0.950       0.980         5393.942       5396.427
+           0.900       0.890         5418.094       5412.890
+           0.800       0.800         5447.345       5445.335
+           0.700       0.640         5468.432       5459.631
+           0.500       0.500         5503.293       5502.908
+           0.300       0.370         5538.155       5543.419
+           0.200       0.220         5559.242       5560.649
+           0.100       0.110         5588.493       5590.518
+           0.050       0.040         5612.644       5607.892
+           0.020       0.020         5639.821       5635.838
+           0.010       0.000         5657.943       5640.732
+
+Chi-Square Test of Model Fit
+
+        Degrees of freedom                       1
+
+        Mean                                 0.878
+        Std Dev                              1.116
+        Number of successful computations      100
+
+             Proportions                   Percentiles
+        Expected    Observed         Expected       Observed
+           0.990       1.000            0.000          0.000
+           0.980       0.970            0.001          0.000
+           0.950       0.940            0.004          0.002
+           0.900       0.900            0.016          0.010
+           0.800       0.830            0.064          0.082
+           0.700       0.720            0.148          0.159
+           0.500       0.490            0.455          0.426
+           0.300       0.290            1.074          0.965
+           0.200       0.170            1.642          1.474
+           0.100       0.090            2.706          2.140
+           0.050       0.040            3.841          3.618
+           0.020       0.010            5.412          4.105
+           0.010       0.000            6.635          4.880
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+        Mean                                 0.017
+        Std Dev                              0.031
+        Number of successful computations      100
+
+        Cumulative Distribution Function
+           Value    Function Value
+           0.990       1.000
+           0.980       1.000
+           0.950       1.000
+           0.900       1.000
+           0.800       1.000
+           0.700       1.000
+           0.500       1.000
+           0.300       1.000
+           0.200       1.000
+           0.100       0.970
+           0.050       0.860
+           0.020       0.720
+           0.010       0.700
+
+CFI/TLI
+
+    CFI
+
+        Mean                                 1.000
+        Std Dev                              0.001
+        Number of successful computations      100
+
+        Cumulative Distribution Function
+           Value    Function Value
+           0.990       0.000
+           0.980       0.000
+           0.950       0.000
+           0.900       0.000
+           0.800       0.000
+           0.700       0.000
+           0.500       0.000
+           0.300       0.000
+           0.200       0.000
+           0.100       0.000
+           0.050       0.000
+           0.020       0.000
+           0.010       0.000
+
+    TLI
+
+        Mean                                 1.002
+        Std Dev                              0.019
+        Number of successful computations      100
+
+        Cumulative Distribution Function
+           Value    Function Value
+           0.990       0.180
+           0.980       0.110
+           0.950       0.030
+           0.900       0.000
+           0.800       0.000
+           0.700       0.000
+           0.500       0.000
+           0.300       0.000
+           0.200       0.000
+           0.100       0.000
+           0.050       0.000
+           0.020       0.000
+           0.010       0.000
+
+SRMR (Standardized Root Mean Square Residual)
+
+        Mean                                 0.007
+        Std Dev                              0.005
+        Number of successful computations      100
+
+        Cumulative Distribution Function
+           Value    Function Value
+           0.990       1.000
+           0.980       1.000
+           0.950       1.000
+           0.900       1.000
+           0.800       1.000
+           0.700       1.000
+           0.500       1.000
+           0.300       1.000
+           0.200       1.000
+           0.100       1.000
+           0.050       1.000
+           0.020       0.990
+           0.010       0.780
+
+
+MODEL RESULTS
+
+                              ESTIMATES              S. E.     M. S. E.  95%  % Sig
+                 Population   Average   Std. Dev.   Average             Cover Coeff
+
+ RI_X     BY
+  X1                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+  X2                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+  X3                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ RI_Y     BY
+  Y1                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+  Y2                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+  Y3                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WX1      BY
+  X1                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WX2      BY
+  X2                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WX3      BY
+  X3                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WY1      BY
+  Y1                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WY2      BY
+  Y2                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WY3      BY
+  Y3                  1.000     1.0000     0.0000     0.0000     0.0000 1.000 0.000
+
+ WX2      ON
+  WX1                 0.400     0.3704     0.1421     0.1376     0.0209 0.950 0.690
+  WY1                 0.150     0.1461     0.0983     0.1055     0.0096 0.960 0.260
+
+ WY2      ON
+  WX1                 0.200     0.2002     0.0996     0.1173     0.0098 0.980 0.400
+  WY1                 0.300     0.3143     0.1166     0.1298     0.0137 0.930 0.660
+
+ WX3      ON
+  WX2                 0.400     0.3632     0.1488     0.1270     0.0233 0.940 0.720
+  WY2                 0.150     0.1626     0.0831     0.0982     0.0070 0.990 0.410
+
+ WY3      ON
+  WX2                 0.200     0.1787     0.1013     0.1141     0.0106 0.960 0.330
+  WY2                 0.300     0.3013     0.1104     0.1171     0.0121 0.960 0.750
+
+ RI_X     WITH
+  RI_Y                0.300     0.2719     0.1911     0.1920     0.0369 0.990 0.430
+
+ WX1      WITH
+  WY1                 0.300     0.3335     0.1814     0.1825     0.0337 0.970 0.410
+
+ WX2      WITH
+  WY2                 0.130     0.1165     0.0806     0.0857     0.0066 0.990 0.290
+
+ WX3      WITH
+  WY3                 0.130     0.1290     0.0652     0.0675     0.0042 0.990 0.530
+
+ Intercepts
+  X1                 -0.043    -0.0227     0.0880     0.0815     0.0081 0.920 0.090
+  X2                 -0.019    -0.0265     0.0823     0.0810     0.0068 0.950 0.050
+  X3                 -0.030    -0.0175     0.0891     0.0813     0.0080 0.910 0.090
+  Y1                  0.091     0.0003     0.0886     0.0815     0.0160 0.730 0.070
+  Y2                 -0.044    -0.0143     0.0872     0.0818     0.0084 0.910 0.060
+  Y3                 -0.021    -0.0041     0.0886     0.0806     0.0081 0.920 0.090
+
+ Variances
+  RI_X                1.000     0.9642     0.2845     0.2578     0.0814 0.960 0.910
+  RI_Y                1.000     0.9370     0.2324     0.2257     0.0574 0.970 0.940
+  WX1                 1.000     1.0310     0.2840     0.2438     0.0808 0.930 1.000
+  WY1                 1.000     1.0584     0.2245     0.2151     0.0533 0.980 1.000
+
+ Residual Variances
+  X1                  0.000     0.0000     0.0000     0.0000     0.0000 1.000 0.000
+  X2                  0.000     0.0000     0.0000     0.0000     0.0000 1.000 0.000
+  X3                  0.000     0.0000     0.0000     0.0000     0.0000 1.000 0.000
+  Y1                  0.000     0.0000     0.0000     0.0000     0.0000 1.000 0.000
+  Y2                  0.000     0.0000     0.0000     0.0000     0.0000 1.000 0.000
+  Y3                  0.000     0.0000     0.0000     0.0000     0.0000 1.000 0.000
+  WX2                 0.781     0.7419     0.1216     0.1154     0.0162 0.920 1.000
+  WX3                 0.781     0.7627     0.1122     0.0913     0.0128 0.940 1.000
+  WY2                 0.834     0.8421     0.1092     0.1258     0.0119 0.950 1.000
+  WY3                 0.834     0.8127     0.1040     0.0982     0.0112 0.930 1.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Average Condition Number for the Information Matrix      0.106E-01
+       (ratio of smallest to largest eigenvalue)
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION
+
+
+           NU
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+                  1             2             3             4             5
+
+
+           NU
+              Y3
+              ________
+                  6
+
+
+           LAMBDA
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+ X1                 0             0             0             0             0
+ X2                 0             0             0             0             0
+ X3                 0             0             0             0             0
+ Y1                 0             0             0             0             0
+ Y2                 0             0             0             0             0
+ Y3                 0             0             0             0             0
+
+
+           LAMBDA
+              WY1           WY2           WY3
+              ________      ________      ________
+ X1                 0             0             0
+ X2                 0             0             0
+ X3                 0             0             0
+ Y1                 0             0             0
+ Y2                 0             0             0
+ Y3                 0             0             0
+
+
+           THETA
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+ X1                 0
+ X2                 0             0
+ X3                 0             0             0
+ Y1                 0             0             0             0
+ Y2                 0             0             0             0             0
+ Y3                 0             0             0             0             0
+
+
+           THETA
+              Y3
+              ________
+ Y3                 0
+
+
+           ALPHA
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+                  0             0             0             0             0
+
+
+           ALPHA
+              WY1           WY2           WY3
+              ________      ________      ________
+                  0             0             0
+
+
+           BETA
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+ RI_X               0             0             0             0             0
+ RI_Y               0             0             0             0             0
+ WX1                0             0             0             0             0
+ WX2                0             0             7             0             0
+ WX3                0             0             0             9             0
+ WY1                0             0             0             0             0
+ WY2                0             0            11             0             0
+ WY3                0             0             0            13             0
+
+
+           BETA
+              WY1           WY2           WY3
+              ________      ________      ________
+ RI_X               0             0             0
+ RI_Y               0             0             0
+ WX1                0             0             0
+ WX2                8             0             0
+ WX3                0            10             0
+ WY1                0             0             0
+ WY2               12             0             0
+ WY3                0            14             0
+
+
+           PSI
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+ RI_X              15
+ RI_Y              16            17
+ WX1                0             0            18
+ WX2                0             0             0            19
+ WX3                0             0             0             0            20
+ WY1                0             0            21             0             0
+ WY2                0             0             0            23             0
+ WY3                0             0             0             0            25
+
+
+           PSI
+              WY1           WY2           WY3
+              ________      ________      ________
+ WY1               22
+ WY2                0            24
+ WY3                0             0            26
+
+
+     STARTING VALUES
+
+
+           NU
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+               -0.043        -0.019        -0.030         0.091        -0.044
+
+
+           NU
+              Y3
+              ________
+               -0.021
+
+
+           LAMBDA
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+ X1             1.000         0.000         1.000         0.000         0.000
+ X2             1.000         0.000         0.000         1.000         0.000
+ X3             1.000         0.000         0.000         0.000         1.000
+ Y1             0.000         1.000         0.000         0.000         0.000
+ Y2             0.000         1.000         0.000         0.000         0.000
+ Y3             0.000         1.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              WY1           WY2           WY3
+              ________      ________      ________
+ X1             0.000         0.000         0.000
+ X2             0.000         0.000         0.000
+ X3             0.000         0.000         0.000
+ Y1             1.000         0.000         0.000
+ Y2             0.000         1.000         0.000
+ Y3             0.000         0.000         1.000
+
+
+           THETA
+              X1            X2            X3            Y1            Y2
+              ________      ________      ________      ________      ________
+ X1             0.000
+ X2             0.000         0.000
+ X3             0.000         0.000         0.000
+ Y1             0.000         0.000         0.000         0.000
+ Y2             0.000         0.000         0.000         0.000         0.000
+ Y3             0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              Y3
+              ________
+ Y3             0.000
+
+
+           ALPHA
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              WY1           WY2           WY3
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           BETA
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+ RI_X           0.000         0.000         0.000         0.000         0.000
+ RI_Y           0.000         0.000         0.000         0.000         0.000
+ WX1            0.000         0.000         0.000         0.000         0.000
+ WX2            0.000         0.000         0.400         0.000         0.000
+ WX3            0.000         0.000         0.000         0.400         0.000
+ WY1            0.000         0.000         0.000         0.000         0.000
+ WY2            0.000         0.000         0.200         0.000         0.000
+ WY3            0.000         0.000         0.000         0.200         0.000
+
+
+           BETA
+              WY1           WY2           WY3
+              ________      ________      ________
+ RI_X           0.000         0.000         0.000
+ RI_Y           0.000         0.000         0.000
+ WX1            0.000         0.000         0.000
+ WX2            0.150         0.000         0.000
+ WX3            0.000         0.150         0.000
+ WY1            0.000         0.000         0.000
+ WY2            0.300         0.000         0.000
+ WY3            0.000         0.300         0.000
+
+
+           PSI
+              RI_X          RI_Y          WX1           WX2           WX3
+              ________      ________      ________      ________      ________
+ RI_X           1.000
+ RI_Y           0.300         1.000
+ WX1            0.000         0.000         1.000
+ WX2            0.000         0.000         0.000         0.781
+ WX3            0.000         0.000         0.000         0.000         0.781
+ WY1            0.000         0.000         0.300         0.000         0.000
+ WY2            0.000         0.000         0.000         0.130         0.000
+ WY3            0.000         0.000         0.000         0.000         0.130
+
+
+           PSI
+              WY1           WY2           WY3
+              ________      ________      ________
+ WY1            1.000
+ WY2            0.000         0.834
+ WY3            0.000         0.000         0.834
+
+
+     Beginning Time:  18:11:00
+        Ending Time:  18:11:01
+       Elapsed Time:  00:00:01
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2021 Muthen & Muthen

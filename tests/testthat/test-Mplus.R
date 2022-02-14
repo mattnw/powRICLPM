@@ -1,4 +1,5 @@
 test_that("Mplus model syntax creation works", {
+
   # Create valid powRICLPM_Mplus() input
   Phi <- matrix(c(.5, .1, .4, .5), ncol = 2, byrow = TRUE)
   wSigma <- matrix(c(1 , .3, .3, 1), ncol = 2, byrow = TRUE)

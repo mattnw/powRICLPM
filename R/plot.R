@@ -1,102 +1,92 @@
 #' @title
-#' Plot powRICLPM Objects
+#' Plot `powRICLPM` Objects
 #'
 #' @description
-#' Plotting method for powRICLPM objects. This function visualizes results from à priori and post hoc powRICLPM analyses.
+#' \code{plot_powRICLPM} visualizes results from `powRICLPM` objects using \pkg{ggplot2}.
 #'
-#' @param x A powRICLPM object.
-#' @param y Phantom argument that has no influence on the plot produced. Included here to make the generic \code{plot()} a method for objects of class powRICLPM.
-#' @param parameter A character string denoting a single variable of interest. Use \code{\link{powRICLPM_names}} to get an overview of valid parameter names for the powRICLPM object.
+#' @param object A `powRICLPM` object.
+#' @param x A character string denoting the variable to be plotted on the x-axis: Must be "sample_size", "time_points", or "ICC".
+#' @param y A character string denoting the performance measure to be plotted on the y-axis. See "Details" for a list of valid performance measures.
+#' @param ... Additional options that are parsed to the mapping `aes()`.
+#' @param wrap A character string denoting the variable to facet the plots by.
+#' @param parameter A character string denoting a single variable of interest. Use \code{\link{names_powRICLPM}} to get an overview of parameter names in the `powRICLPM` object.
 #'
-#' @examples
-#' # Define population parameters for lagged effects and within-component correlations
-#' Phi <- matrix(c(.4, .1, .2, .3), ncol = 2, byrow = TRUE)
-#' wSigma <- matrix(c(1, .3, .3, 1), ncol = 2, byrow = TRUE)
+#' @details
+#' \subsection{Performance measures}{\code{powRICLPM()} computes several performance measures that can be plotted for each condition. These include:
+#' \itemize{
+#'   \item \code{avg}: Average parameter estimate.
+#'   \item \code{stdDev}: Standard deviation of the estimates.
+#'   \item \code{SEAvg}: Mean standard error.
+#'   \item \code{mse}: Mean square error.
+#'   \item \code{acc}: Accuracy, the width of the confidence interval.
+#'   \item \code{cover}: The proportion of times the confidence interval captures the true population value.
+#'   \item \code{pwr}: The proportion of time the **p**-value is below the significance criterion.
+#'   }
+#' }
 #'
-#' # Create powRICLPM object for à priori power analysis
-#' output <- powRICLPM(target_power = 0.5,
-#'                      parameter = "wB2~wA1",
-#'                      search_lower = 300,
-#'                      search_upper = 600,
-#'                      search_step = 50,
-#'                      time_points = 3,
-#'                      ICC = 0.5,
-#'                      RI_cor = 0.3,
-#'                      Phi = Phi,
-#'                      wSigma = wSigma,
-#'                      reps = 50,
-#'                      cores = 1,
-#'                      seed = 123456)
+#' \subsection{Recommendations}{It is recommended to only include study design characteristics on the x-axis (e.g., sample size and the number of repeated measures), and to facet wrap by characteristics of the data (e.g., ICC, skewness, kurtosis). This strategy emphasizes that facets represent characteristics that influence power, but cannot be influenced by the researcher. In other words, facet wraps represent different "worlds", whereas the factors on the x-axis can be tweaked by researchers to reach the desired level of power.}
 #'
-#' # Visualize results
-#' powRICLPM_plot(output, parameter = "wB2~wA1")
+#' @seealso
+#' \itemize{
+#'   \code{\link{coef_powRICLPM}}: Extract performance measures for a specific parameter, across all experimental conditions. This function is used internally in \code{plot_powRICLPM}.
+#' }
+#'
+#'
+#' @return
+#' A `ggplot2` object.
 #'
 #' @export
-powRICLPM_plot <- function(x, y = NULL, parameter = NULL) {
+plot_powRICLPM <- function(object,
+                           x,
+                           y,
+                           ...,
+                           wrap,
+                           parameter = NULL) {
 
-  # Check arguments
-  parameter <- check_parameter_summary(parameter, x)
+  # Argument verification
+  x <- match.arg(x, c("sample_size", "time_points", "ICC"))
+  y <- match.arg(y, c("pwr", "avg", "stdDev", "SEAvg", "mse", "cover", "acc"))
+  parameter <- check_parameter_summary(parameter, object = object)
 
-  # Plot for à priori powRICLPM analysis
-  if(x$session$type == "apriori") {
+  # Get performance table
+  d <- coef_powRICLPM(object = object, parameter = parameter)
 
-    # Combine sample sizes and simulated power across conditions
-    df_plot <- data.frame(
-      sample_size = purrr::map_dbl(x$conditions, function(condition) {
-        condition$sample_size
-        }),
-      sigs = purrr::map_dbl(x$conditions, function(condition) {
-        condition$results[condition$results$par == parameter, "sig"]
-        })
-      )
+  # Create data (ggplot2-argument)
+  p <- ggplot2::ggplot(d, ggplot2::aes_string(x, y, ...))
 
-    # Create plot
-    plot_output <- ggplot2::ggplot(df_plot, ggplot2::aes(x = sample_size, y = sigs)) +
-      ggplot2::geom_point(shape = 19) +
-      ggplot2::geom_hline(
-        yintercept = x$session$target_power,
-        linetype = "dashed") +
-      ggplot2::labs(
-        title = "Preliminary power results across different sample sizes",
-        caption = paste("Results based on", x$session$reps, "replications.")) +
-      ggplot2::scale_x_continuous(
-        name = "Sample size",
-        breaks = seq(x$session$search_lower, x$session$search_upper, x$session$search_step)) +
-      ggplot2::scale_y_continuous(
-        name = "Power",
-        limits = c(0, 1))
+  # Create geoms
+  g <- list(
+    ggplot2::geom_point(shape = 19),
+    ggplot2::geom_line(),
+    if (y == "pwr") {ggplot2::geom_hline(yintercept = object$session$target_power, linetype = "dashed")}
+  )
 
-  } else if (x$session$type == "posthoc") {
+  # Create facets
+  f <- ggplot2::facet_wrap(wrap)
 
-    # Combine sample sizes and simulated power across conditions into a data frame
-    df_plot <- data.frame(
-      sample_sizes = purrr::map_dbl(x$conditions, function(condition) { condition$sample_size }),
-      time_points = purrr::map_dbl(x$conditions, function(condition) { condition$time_points }),
-      sigs = purrr::map_dbl(x$conditions, function(condition) { condition$results[condition$results$par == parameter, "sig"] })
+  # Create scales
+  s <- list(
+    if (y == "pwr") {ggplot2::scale_y_continuous(name = "Power",
+                                                 limits = c(0, 1))},
+    if (y == "avg") {ggplot2::scale_y_continuous(name = "Average estimate")},
+    if (y == "stdDev") {ggplot2::scale_y_continuous(name = "Standard error of the estimates")},
+    if (y == "SEAvg") {ggplot2::scale_y_continuous(name = "Average standard error")},
+    if (y == "mse") {ggplot2::scale_y_continuous(name = "Mean Square Error (MSE)")},
+    if (y == "cover") {ggplot2::scale_y_continuous(name = "Coverage rate")},
+    if (x == "sample_size") {ggplot2::scale_x_continuous(name = "Sample size",
+                                                         breaks = d$sample_size)},
+    if (x == "time_points") {ggplot2::scale_x_continuous(name = "Number of time points",
+                                                         breaks = d$time_points)},
+    if (x == "ICC") {ggplot2::scale_x_continuous(name = "ICC",
+                                                 breaks = d$ICC)}
     )
 
-    # Create plot
-    plot_output <- ggplot2::ggplot(
-      data = df_plot,
-      mapping = ggplot2::aes(x = sample_sizes,
-                             y = sigs,
-                             color = as.factor(time_points))) +
-      ggplot2::geom_point(shape = 19) +
-      ggplot2::geom_line() +
-      ggplot2::labs(
-        title = "Simulated power across conditions",
-        caption = paste("Results based on", x$session$reps, "replications."),
-        color = "Number of time points") +
-      ggplot2::scale_x_continuous(
-        name = "Sample size",
-        breaks = unique(df_plot$sample_sizes)) +
-      ggplot2::scale_y_continuous(
-        name = "Power",
-        limits = c(0, 1)) +
-      ggplot2::theme(legend.position = "bottom")
-  }
-
-  return(plot_output)
+  # Combine data, geoms, facets, and scales
+  p <- p + g + f + s
+  p
 }
+
+
+
 
 

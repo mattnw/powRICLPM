@@ -1,0 +1,58 @@
+---
+title: "Visualize results"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Visualize results}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The `powRICLPM` package provides a user-friendly function `plot_powRICLPM()` to visualize results from a powRICLPM power analysis. Below, I explain how this function can be used, and demonstrate how visualizations can be adjusted for specific needs. 
+
+## Visualization using `plot_powRICLPM()`
+The `plot_powRICLPM()` function creates a "ggplot2" scatter plot of `powRICLPM()`-output. It requires the follow arguments:
+
+- `object`: A `powRICLPM` object, 
+- `x`: The factor that provides x coordinates for the plot. It accepts "sample_size", "time_points", or "ICC" as input, referring to the sample size, number of time points, and proportion of between-unit variance, respectively. 
+- `y`: The factor that provides y coordinates for the plot. It accepts "pwr", "avg", "stdDev", "SEAvg", "mse", "cover", or "acc". More information on what these values refer to can be found in the "Power analysis" vignette at [https://jeroendmulder.github.io/powRICLPM/analysis.html](https://jeroendmulder.github.io/powRICLPM/analysis.html). 
+- `wrap`: The factor based on which visualizations are subsetted. 
+- `...`: Arguments provided to `...` are parsed to the mapping argument (`aes()`). For example, it can be used to group the results according to number of time points by passing `color = "time_points"` as an additional argument to `plot_powRICLPM()`. 
+
+Continuing with the example as introduced in the "Power analysis" vignette at [https://jeroendmulder.github.io/powRICLPM/analysis.html](https://jeroendmulder.github.io/powRICLPM/analysis.html), we can visualize how the achieved power to detect our small effect of interest (as captured by the "wB2~wA1" parameter) relates to sample size, using a scatter plot with sample size on the x-axis and power on the y-axis. Therefore, we specify:
+
+```{r plot1, eval = FALSE}
+# Create a scatter plot of power by sample size
+p1 <- plot_powRICLPM(output, x = "sample_size", y = "pwr", parameter = "wB2~wA1")
+p1
+```
+
+However, this visualization does not distinguish between conditions with a different number of time points. Therefore, results from conditions with different number of time points can be mapped to lines with different colors or shapes by including the `color = "time_points"` or `shape = "time_points"` arguments. 
+
+```{r plot2, eval = FALSE}
+# Create a scatter plot of power by sample size and number of time points (color/shape)
+p2 <- plot_powRICLPM(output, x = "sample_size", y = "pwr", color = "time_points", parameter = "wB2~wA1")
+p2
+```
+
+Suppose that the powRICLPM analysis also included varying proportions of between-unit variance (`ICC`). Visualizations can then be subsetted to multiple plots, each reflecting a specific proportion of between-unit variance, by providing a factor to the `wrap` argument. 
+
+```{r plot3, eval = FALSE}
+p3 <- plot_powRICLPM(output, x = "sample_size", y = "pwr", color = "time_points", wrap = "factor(ICC)", parameter = "wB2~wA1")
+p3
+```
+
+This functionality is implemented behind the scenes using the `facet_wrap()` function of the `ggplot2` package. 
+
+## Customizing your plots
+`plot_powRICLPM()` returns a `ggplot2` object that can be fully customized using `ggplot2` functionality. For example, you can change the scales, add titles, change geoms, etc. More information about options in the `ggplot2` framework can be found at [https://ggplot2-book.org/index.html](https://ggplot2-book.org/index.html). In the below example, I add a title and change the labels on the x-axis: 
+
+```{r plot4, eval = FALSE}
+p4 <- p2 + 
+  labs(title = "Power analysis for RI-CLPM",
+       caption = "Based on 1000 replications.") +
+  scale_x_continuous(name = "Sample size",
+                     breaks = seq(100, 1000, 100),
+                     guide = guide_axis(n.dodge = 2))
+p4
+```
+
