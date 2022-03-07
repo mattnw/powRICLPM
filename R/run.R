@@ -36,7 +36,7 @@
 #' @return A list.
 #'
 #' @importFrom lavaan simulateData inspect parameterEstimates coef lavaan
-run_condition <- function(object, p) {
+run_condition <- function(object, p, estimator) {
 
   # Number of variables
   k <- 2 # Fixed in v0.2.0-alpha and earlier
@@ -96,7 +96,7 @@ run_condition <- function(object, p) {
     }
 
     # Fit model
-    fit <- safe_quiet_lavaan(object$est_synt, data = dat, estimator = "DWLS")
+    fit <- safe_quiet_lavaan(object$est_synt, data = dat, estimator = estimator)
 
     # Check if fatal error occurred
     if (!is.null(fit$error)) {
