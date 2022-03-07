@@ -112,6 +112,7 @@ powRICLPM <- function(target_power,
                       kurtosis = 0,
                       alpha = 0.05,
                       reps,
+                      estimator = "ML",
                       seed = NA,
                       save_path = NA) {
 
@@ -159,6 +160,7 @@ powRICLPM <- function(target_power,
                   kurtosis = kurtosis,
                   alpha = alpha,
                   reps = reps,
+                  estimator = estimator,
                   seed = seed,
                   save_path = save_path)
 
@@ -166,7 +168,7 @@ powRICLPM <- function(target_power,
   p <- progressr::progressor(along = object$conditions)
 
   # Run Monte Carlo simulation for each condition
-  object$conditions <- furrr::future_map(object$conditions, run_condition, p = p,
+  object$conditions <- furrr::future_map(object$conditions, run_condition, p = p, estimator = estimator,
                                          .options = furrr::furrr_options(
                                            seed = seed,
                                            scheduling = 2L # Dynamic
